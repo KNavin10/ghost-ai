@@ -5,11 +5,11 @@ change.
 
 ## Current Phase
 
-- Complete — authentication
+- Complete — project API backend and editor home wiring
 
 ## Current Goal
 
-- Implement the project dialogs and sidebar actions feature unit.
+- None.
 
 ## Completed
 
@@ -26,14 +26,23 @@ change.
 - Added `proxy.ts` to protect all routes by default while allowing the configured sign-in and sign-up paths.
 - Updated the root redirect and editor navbar to use Clerk's authenticated redirect flow and built-in user menu.
 - Verified the authentication implementation with `npm run lint` and `npm run build`.
+- Added Prisma v7 multi-file project and collaborator models with the required ownership, collaboration, status, timestamps, relations, and indexes.
+- Added the cached Prisma client singleton with direct PostgreSQL and Prisma Accelerate connection branches.
+- Created and applied the `init_project_models` migration to the primary Prisma Postgres database, then generated Prisma Client.
+- Verified the Prisma implementation with schema validation, migration status, `npm run lint`, and `npm run build`.
+- Added authenticated REST API routes to list and create the current user's projects, plus owner-checked rename and delete endpoints.
+- Kept `/api/projects` in Clerk middleware while allowing its handlers to return the required `401` response instead of Clerk's API `404`; non-owner mutations return `403`.
+- Added server-side owned and collaborator-shared project loading for the editor routes, with only serializable sidebar data passed to the interactive client shell.
+- Replaced mock project data and timed dialog behavior with `hooks/use-project-actions`, which creates aligned project and room IDs, calls the project API, and refreshes or redirects after mutations.
+- Added the dynamic project workspace route so newly created and existing sidebar projects can open at `/editor/[projectId]`.
 
 ## In Progress
 
-- Implementing the mock project list, create/rename/delete dialogs, and mobile sidebar backdrop specified in `04-project-dialogs.md`.
+- None.
 
 ## Next Up
 
-- Verify the project dialogs with lint, build, and interactive editor checks.
+- Define the next project-workspace feature.
 
 ## Open Questions
 
@@ -45,6 +54,7 @@ change.
 - Keep the generated `components/ui/*` files unmodified after installation.
 - Keep editor shell state controlled by the consuming screen so the sidebar can overlay any editor canvas without changing its layout.
 - Use Clerk's built-in components and default profile flows, with the dark theme mapped to the application's existing CSS variables.
+- Use the generated slug-plus-suffix project ID as the Liveblocks room ID so project persistence and real-time room addressing remain aligned.
 
 ## Session Notes
 
@@ -52,3 +62,6 @@ change.
 - Editor shell verification passed: `npm run lint` and `npm run build`.
 - Authentication verification passed: `npm run lint` and `npm run build`; the public sign-in and sign-up pages returned HTTP 200 with their expected layout text.
 - Local live authentication was not exercised because this workspace has no Clerk keys or sign-in/sign-up route variables configured; no environment variables were added or renamed.
+- Prisma verification passed: the initial migration is applied to the primary database, Prisma Client generated successfully, and lint/build pass.
+- Project API verification passed: `npm run lint` and `npm run build` pass.
+- Editor home wiring verification passed: `npm run lint` and `npm run build` pass. The editor routes are dynamic and defer Prisma initialization until request time, so production builds do not require a database connection.

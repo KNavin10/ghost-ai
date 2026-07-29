@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import type { ProjectDialogController } from "@/components/editor/use-project-dialogs"
+import type { ProjectActionController } from "@/hooks/use-project-actions"
 
 type ProjectDialogsProps = {
-  dialogs: ProjectDialogController
+  dialogs: ProjectActionController
 }
 
 function ProjectDialogs({ dialogs }: ProjectDialogsProps) {
@@ -71,7 +71,9 @@ function ProjectDialogs({ dialogs }: ProjectDialogsProps) {
               />
             </div>
 
-            <SlugPreview slug={dialogs.projectSlug} />
+            <RoomIdPreview roomId={dialogs.projectRoomId} />
+
+            <DialogError error={dialogs.error} />
 
             <DialogFooter>
               <Button
@@ -112,7 +114,7 @@ function ProjectDialogs({ dialogs }: ProjectDialogsProps) {
               />
             </div>
 
-            <SlugPreview slug={dialogs.projectSlug} />
+            <DialogError error={dialogs.error} />
 
             <DialogFooter>
               <Button
@@ -142,6 +144,8 @@ function ProjectDialogs({ dialogs }: ProjectDialogsProps) {
               </DialogDescription>
             </DialogHeader>
 
+            <DialogError error={dialogs.error} />
+
             <DialogFooter>
               <Button
                 disabled={dialogs.isLoading}
@@ -162,12 +166,20 @@ function ProjectDialogs({ dialogs }: ProjectDialogsProps) {
   )
 }
 
-function SlugPreview({ slug }: { slug: string }) {
+function RoomIdPreview({ roomId }: { roomId: string }) {
   return (
     <p aria-live="polite" className="text-sm text-muted-foreground">
-      Slug preview: <span className="font-mono text-foreground">{slug || "your-project-slug"}</span>
+      Room ID: <span className="font-mono text-foreground">{roomId}</span>
     </p>
   )
+}
+
+function DialogError({ error }: { error: string | null }) {
+  if (!error) {
+    return null
+  }
+
+  return <p className="text-sm text-destructive" role="alert">{error}</p>
 }
 
 export { ProjectDialogs }
