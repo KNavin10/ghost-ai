@@ -18,4 +18,9 @@ Read the following files in order before implementing or making any architectura
 
 Update `context/progress-tracker.md` after each meaningful implementation change.
 
+Before implementing anything that touches a third-party library, framework, or
+SDK, query the Context7 MCP server for current docs
+(`mcp_context7_resolve_library_id` → `mcp_context7_query_docs`). See the
+"Feature Implementation" section in the root `AGENTS.md` for the full rule.
+
 If implementation changes the architecture, scope, or standards documented in the context files, update the relevant file before continuing.
