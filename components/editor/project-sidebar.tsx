@@ -1,6 +1,7 @@
 "use client"
 
 import { Pencil, Plus, Trash2, X } from "lucide-react"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -10,38 +11,28 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
-import type { Project } from "@/components/editor/use-project-dialogs"
-
-const myProjects: Project[] = [
-  {
-    id: "architecture-workspace",
-    isOwned: true,
-    name: "Architecture workspace",
-  },
-]
-
-const sharedProjects: Project[] = [
-  {
-    id: "shared-design-system",
-    isOwned: false,
-    name: "Shared design system",
-  },
-]
+import type { ProjectListItem } from "@/lib/project-types"
 
 type ProjectSidebarProps = {
+  activeProjectId?: string
   isOpen: boolean
   onCreate: () => void
-  onDelete: (project: Project) => void
+  onDelete: (project: ProjectListItem) => void
   onOpenChange: (isOpen: boolean) => void
-  onRename: (project: Project) => void
+  onRename: (project: ProjectListItem) => void
+  ownedProjects: ProjectListItem[]
+  sharedProjects: ProjectListItem[]
 }
 
 function ProjectSidebar({
+  activeProjectId,
   isOpen,
   onCreate,
   onDelete,
   onOpenChange,
   onRename,
+  ownedProjects,
+  sharedProjects,
 }: ProjectSidebarProps) {
   return (
     <>
@@ -86,13 +77,17 @@ function ProjectSidebar({
 
           <TabsContent value="my-projects">
             <ProjectList
+              activeProjectId={activeProjectId}
+              emptyMessage="No projects yet. Create one to get started."
               onDelete={onDelete}
               onRename={onRename}
-              projects={myProjects}
+              projects={ownedProjects}
             />
           </TabsContent>
           <TabsContent value="shared">
             <ProjectList
+              activeProjectId={activeProjectId}
+              emptyMessage="No shared projects yet."
               onDelete={onDelete}
               onRename={onRename}
               projects={sharedProjects}
@@ -112,12 +107,24 @@ function ProjectSidebar({
 }
 
 type ProjectListProps = {
-  onDelete: (project: Project) => void
-  onRename: (project: Project) => void
-  projects: Project[]
+  activeProjectId?: string
+  emptyMessage: string
+  onDelete: (project: ProjectListItem) => void
+  onRename: (project: ProjectListItem) => void
+  projects: ProjectListItem[]
 }
 
-function ProjectList({ onDelete, onRename, projects }: ProjectListProps) {
+function ProjectList({
+  activeProjectId,
+  emptyMessage,
+  onDelete,
+  onRename,
+  projects,
+}: ProjectListProps) {
+  if (projects.length === 0) {
+    return <p className="px-2 py-3 text-sm text-muted-foreground">{emptyMessage}</p>
+  }
+
   return (
     <div className="grid gap-1">
       {projects.map((project) => (
@@ -125,9 +132,13 @@ function ProjectList({ onDelete, onRename, projects }: ProjectListProps) {
           className="flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted"
           key={project.id}
         >
-          <span className="min-w-0 flex-1 truncate text-sm font-medium">
+          <Link
+            aria-current={project.id === activeProjectId ? "page" : undefined}
+            className="min-w-0 flex-1 truncate text-sm font-medium"
+            href={`/editor/${encodeURIComponent(project.id)}`}
+          >
             {project.name}
-          </span>
+          </Link>
 
           {project.isOwned && (
             <div className="flex items-center gap-1">
