@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- No active goal — ready for the next feature unit.
+- Implement the project dialogs and sidebar actions feature unit.
 
 ## Completed
 
@@ -29,11 +29,11 @@ change.
 
 ## In Progress
 
-- None.
+- Implementing the mock project list, create/rename/delete dialogs, and mobile sidebar backdrop specified in `04-project-dialogs.md`.
 
 ## Next Up
 
-- Begin the next feature unit.
+- Verify the project dialogs with lint, build, and interactive editor checks.
 
 ## Open Questions
 
