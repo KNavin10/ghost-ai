@@ -5,7 +5,7 @@ change.
 
 ## Current Phase
 
-- Complete — project API backend and editor home wiring
+- Complete — project sharing
 
 ## Current Goal
 
@@ -34,7 +34,16 @@ change.
 - Kept `/api/projects` in Clerk middleware while allowing its handlers to return the required `401` response instead of Clerk's API `404`; non-owner mutations return `403`.
 - Added server-side owned and collaborator-shared project loading for the editor routes, with only serializable sidebar data passed to the interactive client shell.
 - Replaced mock project data and timed dialog behavior with `hooks/use-project-actions`, which creates aligned project and room IDs, calls the project API, and refreshes or redirects after mutations.
-- Added the dynamic project workspace route so newly created and existing sidebar projects can open at `/editor/[projectId]`.
+- Added the dynamic project workspace route so newly created and existing sidebar projects can open at `/editor/[roomId]`.
+- Added reusable server-only Clerk identity and project access helpers that authorize rooms by owner ID or collaborator email.
+- Replaced the generic dynamic editor page with the server-checked `/editor/[roomId]` workspace route, including sign-in redirection and a shared denied state for missing or unauthorized projects.
+- Built the full-viewport project workspace with the project name, share control, AI sidebar toggle, existing project sidebar, centered canvas placeholder, and future AI-chat placeholder.
+- Added a visible active-room treatment in the project sidebar and defaulted shared rooms to the Shared tab.
+- Added access-aware collaborator APIs for listing, inviting, and removing project collaborators, with owner-only mutation enforcement and normalized email storage.
+- Enriched collaborator records through Clerk's Backend API with display names and avatar images while preserving email-only fallback behavior for unknown or unavailable Clerk users.
+- Wired the workspace Share button to a project sharing dialog with collaborator loading, owner invite/remove controls, owner-only project-link copying, and temporary `Copied!` feedback.
+- Kept collaborator sharing read-only by hiding invite, remove, and copy-link controls while still showing the current collaborator list.
+- Refined the share dialog from the supplied visual reference with separate workspace-link and invite cards, an owner-first access list, people count, `OWNER` and `COLLABORATOR` role tags, and destructive-red remove actions.
 
 ## In Progress
 
@@ -42,7 +51,7 @@ change.
 
 ## Next Up
 
-- Define the next project-workspace feature.
+- Define the next canvas, real-time collaboration, or AI-chat feature unit.
 
 ## Open Questions
 
@@ -55,6 +64,9 @@ change.
 - Keep editor shell state controlled by the consuming screen so the sidebar can overlay any editor canvas without changing its layout.
 - Use Clerk's built-in components and default profile flows, with the dark theme mapped to the application's existing CSS variables.
 - Use the generated slug-plus-suffix project ID as the Liveblocks room ID so project persistence and real-time room addressing remain aligned.
+- Keep Clerk identity lookup and owner-or-collaborator project authorization in `lib/project-access.ts` so workspace pages do not duplicate access rules.
+- Store collaborator access by normalized email only, enrich display data from Clerk at read time, and keep ownership checks in every sharing mutation endpoint.
+- Resolve the project owner from Clerk at share-list read time so the access list can show the owner profile and role without adding a local user record.
 
 ## Session Notes
 
@@ -65,3 +77,9 @@ change.
 - Prisma verification passed: the initial migration is applied to the primary database, Prisma Client generated successfully, and lint/build pass.
 - Project API verification passed: `npm run lint` and `npm run build` pass.
 - Editor home wiring verification passed: `npm run lint` and `npm run build` pass. The editor routes are dynamic and defer Prisma initialization until request time, so production builds do not require a database connection.
+- Editor workspace shell verification passed: `next typegen`, `npm run lint`, `tsc --noEmit`, `npm run build`, and `git diff --check`; the build reports `/editor/[roomId]` as a dynamic server route.
+- Click-level authenticated and denied-state verification was unavailable because no in-app or extension browser was connected. A local non-browser request was stopped by Clerk's development-browser guard before the page ran, while `/sign-in` returned HTTP 200.
+- Project sharing verification passed: `npm run lint`, `tsc --noEmit`, `npm run build`, and `git diff --check`; the build reports both collaborator API routes as dynamic, and live unauthenticated list/invite/remove requests each returned the required HTTP 401.
+- Authenticated owner/collaborator click testing and live Clerk profile enrichment were unavailable because no browser connection was present; these paths still require a signed-in two-user smoke test against the configured Clerk instance and database.
+- Share dialog reference-design verification passed: `npm run lint`, `tsc --noEmit`, `npm run build`, and `git diff --check`; owner and collaborator profile rows now share one tagged list layout, and only collaborator rows expose the red remove action to owners.
+- Share dialog ownership gating now initializes from the server-rendered project prop and resolves to the collaborator API's live `isOwner` result before controlling invite, copy-link, remove, and read-only UI.
