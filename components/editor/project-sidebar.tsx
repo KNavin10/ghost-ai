@@ -34,6 +34,12 @@ function ProjectSidebar({
   ownedProjects,
   sharedProjects,
 }: ProjectSidebarProps) {
+  const defaultTab = sharedProjects.some(
+    (project) => project.id === activeProjectId
+  )
+    ? "shared"
+    : "my-projects"
+
   return (
     <>
       {isOpen && (
@@ -69,7 +75,11 @@ function ProjectSidebar({
           </Button>
         </div>
 
-        <Tabs className="min-h-0 flex-1 gap-4 px-4 py-4" defaultValue="my-projects">
+        <Tabs
+          className="min-h-0 flex-1 gap-4 px-4 py-4"
+          defaultValue={defaultTab}
+          key={activeProjectId ?? "editor-home"}
+        >
           <TabsList className="w-full">
             <TabsTrigger value="my-projects">My Projects</TabsTrigger>
             <TabsTrigger value="shared">Shared</TabsTrigger>
@@ -127,45 +137,53 @@ function ProjectList({
 
   return (
     <div className="grid gap-1">
-      {projects.map((project) => (
-        <div
-          className="flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted"
-          key={project.id}
-        >
-          <Link
-            aria-current={project.id === activeProjectId ? "page" : undefined}
-            className="min-w-0 flex-1 truncate text-sm font-medium"
-            href={`/editor/${encodeURIComponent(project.id)}`}
-          >
-            {project.name}
-          </Link>
+      {projects.map((project) => {
+        const isActive = project.id === activeProjectId
 
-          {project.isOwned && (
-            <div className="flex items-center gap-1">
-              <Button
-                aria-label={`Rename ${project.name}`}
-                onClick={() => onRename(project)}
-                size="icon-xs"
-                type="button"
-                variant="ghost"
-              >
-                <Pencil />
-                <span className="sr-only">Rename {project.name}</span>
-              </Button>
-              <Button
-                aria-label={`Delete ${project.name}`}
-                onClick={() => onDelete(project)}
-                size="icon-xs"
-                type="button"
-                variant="ghost"
-              >
-                <Trash2 />
-                <span className="sr-only">Delete {project.name}</span>
-              </Button>
-            </div>
-          )}
-        </div>
-      ))}
+        return (
+          <div
+            className={cn(
+              "flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-muted",
+              isActive && "bg-muted"
+            )}
+            data-active={isActive || undefined}
+            key={project.id}
+          >
+            <Link
+              aria-current={isActive ? "page" : undefined}
+              className="min-w-0 flex-1 truncate text-sm font-medium"
+              href={`/editor/${encodeURIComponent(project.id)}`}
+            >
+              {project.name}
+            </Link>
+
+            {project.isOwned && (
+              <div className="flex items-center gap-1">
+                <Button
+                  aria-label={`Rename ${project.name}`}
+                  onClick={() => onRename(project)}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                >
+                  <Pencil />
+                  <span className="sr-only">Rename {project.name}</span>
+                </Button>
+                <Button
+                  aria-label={`Delete ${project.name}`}
+                  onClick={() => onDelete(project)}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                >
+                  <Trash2 />
+                  <span className="sr-only">Delete {project.name}</span>
+                </Button>
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
