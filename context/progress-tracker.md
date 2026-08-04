@@ -58,6 +58,7 @@ change.
 - Documented the canvas rendering failure, root cause, resolution, and permanent regression checks in the issue record, shape-panel feature spec, and code standards.
 - Replaced the faint single dot grid with three uniquely identified React Flow star layers that vary token-derived brightness, size, spacing, and offset while sharing the canvas background.
 - Documented the faint-grid report, its zoom-scaled contrast cause, and permanent multi-zoom star-field checks in the issue record, shape-panel specification, and code standards.
+- Added root `.coderabbit.yaml` path filters so CodeRabbit reviews TypeScript/TSX and configuration files while excluding Markdown, MDX, the entire `context/` tree, generated output, dependencies, and lockfiles.
 
 ## In Progress
 
@@ -87,6 +88,7 @@ change.
 - Use a validated custom drag MIME payload for new shapes and route node additions through the Liveblocks-provided `onNodesChange` handler so dropped nodes join the synchronized flow state.
 - Treat the stored canvas shape discriminator as a renderer contract: every supported value must produce its own visible silhouette and be checked in the rendered canvas, not only in drag payload data.
 - Build decorative React Flow backgrounds from uniquely identified, transparent overlay layers so later patterns do not hide earlier ones and all colors remain derived from application theme tokens.
+- Keep automated review scope explicit: review source and configuration extensions, and exclude documentation/context trees and generated dependency metadata.
 
 ## Session Notes
 
@@ -109,3 +111,4 @@ change.
 - Shape panel verification passed: `npm run lint`, `tsc --noEmit`, `npm run build`, and `git diff --check`; interactive live-room drag/drop remains unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
 - Canvas visual-fix verification passed: `npm run lint`, `tsc --noEmit`, and `npm run build`; the renderer exhaustively covers all six `CanvasShape` values, and the supplied broken-state screenshot was checked against the corrected token-based surface treatment. Interactive live-room drag/drop remains unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
 - Starry canvas background verification passed: `npm run lint`, `tsc --noEmit`, `npm run build`, and `git diff --check`; installed React Flow source confirms dot size scales with zoom, and the canvas now uses three uniquely identified transparent overlay patterns with stronger token-derived contrast. Live zoom-level visual verification remains manual because no connected browser was available in this session.
+- CodeRabbit configuration validation passed: `.coderabbit.yaml` parses successfully with the installed YAML parser, and `git diff --check` reports no whitespace errors.
