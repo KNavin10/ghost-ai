@@ -5,7 +5,7 @@ change.
 
 ## Current Phase
 
-- Complete — project sharing
+- Complete — Starry canvas background
 
 ## Current Goal
 
@@ -44,6 +44,21 @@ change.
 - Wired the workspace Share button to a project sharing dialog with collaborator loading, owner invite/remove controls, owner-only project-link copying, and temporary `Copied!` feedback.
 - Kept collaborator sharing read-only by hiding invite, remove, and copy-link controls while still showing the current collaborator list.
 - Refined the share dialog from the supplied visual reference with separate workspace-link and invite cards, an owner-first access list, people count, `OWNER` and `COLLABORATOR` role tags, and destructive-red remove actions.
+- Added typed Liveblocks presence for cursor position and AI-thinking state, plus Clerk-backed user metadata for ID, display name, avatar, and deterministic cursor color.
+- Added the cached Liveblocks Node client and a fixed-palette user-ID color helper without evaluating the secret-key requirement during production builds.
+- Added `POST /api/liveblocks-auth` with Clerk authentication, existing project access checks, private room creation, and a room-scoped write token carrying the current user's metadata.
+- Kept the Liveblocks auth endpoint under handler-level authentication so unauthenticated requests receive an explicit HTTP 401 response.
+- Added a client-side canvas boundary with the Liveblocks auth endpoint, project-scoped room provider, initial cursor presence, Suspense loading state, and connection-error fallback.
+- Replaced the workspace canvas placeholder with a React Flow canvas backed by `useLiveblocksFlow`, starting from empty synchronized nodes and edges with loose connections, fit-to-view, a minimap, and a dot background.
+- Added shared React Flow canvas data, custom node, and custom edge types in `types/canvas.ts`.
+- Added a floating bottom-center shape panel with draggable rectangle, diamond, circle, pill, cylinder, and hexagon controls and explicit default dimensions.
+- Added validated shape drag payloads and canvas drop handling that converts screen coordinates through React Flow and inserts Liveblocks-synchronized `canvasNode` nodes with empty labels, the default color, dragged shape data, and shape-timestamp-counter IDs.
+- Replaced the temporary rectangular `canvasNode` renderer with distinct SVG silhouettes for rectangle, diamond, circle, pill, cylinder, and hexagon while preserving centered labels and selected-state outlines.
+- Unified the React Flow workspace and canvas background treatment, and mapped the dot grid and minimap to application theme tokens so the canvas reads as one continuous design surface.
+- Documented the canvas rendering failure, root cause, resolution, and permanent regression checks in the issue record, shape-panel feature spec, and code standards.
+- Replaced the faint single dot grid with three uniquely identified React Flow star layers that vary token-derived brightness, size, spacing, and offset while sharing the canvas background.
+- Documented the faint-grid report, its zoom-scaled contrast cause, and permanent multi-zoom star-field checks in the issue record, shape-panel specification, and code standards.
+- Added root `.coderabbit.yaml` path filters so CodeRabbit reviews TypeScript/TSX and configuration files while excluding Markdown, MDX, the entire `context/` tree, generated output, dependencies, and lockfiles.
 
 ## In Progress
 
@@ -51,7 +66,7 @@ change.
 
 ## Next Up
 
-- Define the next canvas, real-time collaboration, or AI-chat feature unit.
+- Define the next feature spec after shape creation.
 
 ## Open Questions
 
@@ -67,6 +82,13 @@ change.
 - Keep Clerk identity lookup and owner-or-collaborator project authorization in `lib/project-access.ts` so workspace pages do not duplicate access rules.
 - Store collaborator access by normalized email only, enrich display data from Clerk at read time, and keep ownership checks in every sharing mutation endpoint.
 - Resolve the project owner from Clerk at share-list read time so the access list can show the owner profile and role without adding a local user record.
+- Keep Liveblocks rooms private and authorize only the verified project ID in each short-lived access token instead of granting public or persistent collaborator permissions.
+- Cache the Liveblocks Node client across requests and derive cursor colors deterministically from Clerk user IDs using a fixed palette.
+- Keep the project workspace route server-rendered and isolate Liveblocks and React Flow browser state inside the client-side canvas boundary.
+- Use a validated custom drag MIME payload for new shapes and route node additions through the Liveblocks-provided `onNodesChange` handler so dropped nodes join the synchronized flow state.
+- Treat the stored canvas shape discriminator as a renderer contract: every supported value must produce its own visible silhouette and be checked in the rendered canvas, not only in drag payload data.
+- Build decorative React Flow backgrounds from uniquely identified, transparent overlay layers so later patterns do not hide earlier ones and all colors remain derived from application theme tokens.
+- Keep automated review scope explicit: review source and configuration extensions, and exclude documentation/context trees and generated dependency metadata.
 
 ## Session Notes
 
@@ -83,3 +105,10 @@ change.
 - Authenticated owner/collaborator click testing and live Clerk profile enrichment were unavailable because no browser connection was present; these paths still require a signed-in two-user smoke test against the configured Clerk instance and database.
 - Share dialog reference-design verification passed: `npm run lint`, `tsc --noEmit`, `npm run build`, and `git diff --check`; owner and collaborator profile rows now share one tagged list layout, and only collaborator rows expose the red remove action to owners.
 - Share dialog ownership gating now initializes from the server-rendered project prop and resolves to the collaborator API's live `isOwner` result before controlling invite, copy-link, remove, and read-only UI.
+- Liveblocks setup verification passed: `npm run lint`, `tsc --noEmit`, `npm run build`, and `git diff --check`; the build reports `/api/liveblocks-auth` as a dynamic route, and a live unauthenticated token request returned HTTP 401.
+- Live room creation and token issuance remain unverified because `LIVEBLOCKS_SECRET_KEY` is not configured locally; no credential value or placeholder was added to the repository.
+- Base canvas verification passed: `npm run lint`, `tsc --noEmit`, and `npm run build`; the build keeps `/editor/[roomId]` as a dynamic server-rendered route.
+- Shape panel verification passed: `npm run lint`, `tsc --noEmit`, `npm run build`, and `git diff --check`; interactive live-room drag/drop remains unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
+- Canvas visual-fix verification passed: `npm run lint`, `tsc --noEmit`, and `npm run build`; the renderer exhaustively covers all six `CanvasShape` values, and the supplied broken-state screenshot was checked against the corrected token-based surface treatment. Interactive live-room drag/drop remains unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
+- Starry canvas background verification passed: `npm run lint`, `tsc --noEmit`, `npm run build`, and `git diff --check`; installed React Flow source confirms dot size scales with zoom, and the canvas now uses three uniquely identified transparent overlay patterns with stronger token-derived contrast. Live zoom-level visual verification remains manual because no connected browser was available in this session.
+- CodeRabbit configuration validation passed: `.coderabbit.yaml` parses successfully with the installed YAML parser, and `git diff --check` reports no whitespace errors.

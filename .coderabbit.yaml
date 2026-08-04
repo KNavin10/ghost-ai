@@ -1,0 +1,24 @@
+reviews:
+  path_filters:
+    # Review application and configuration source only.
+    - "**/*.ts"
+    - "**/*.tsx"
+    - "**/*.config.*"
+    - "**/*.json"
+    - "**/*.yaml"
+    - "**/*.yml"
+    - "**/*.toml"
+    - "**/*.ini"
+    - ".coderabbit.yaml"
+    - "**/package.json"
+    - "**/tsconfig*.json"
+    - "**/components.json"
+    # Keep documentation and project context out of CodeRabbit reviews.
+    - "!**/*.md"
+    - "!**/*.mdx"
+    - "!context/**"
+    # Lockfiles are generated dependency metadata, not review targets.
+    - "!**/*lock*.json"
+    - "!**/.next/**"
+    - "!**/node_modules/**"
+    - "!generated/**"

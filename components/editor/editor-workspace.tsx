@@ -11,6 +11,7 @@ import {
   Share2,
 } from "lucide-react"
 
+import { EditorCanvas } from "@/components/editor/editor-canvas"
 import { ProjectDialogs } from "@/components/editor/project-dialogs"
 import { ProjectSidebar } from "@/components/editor/project-sidebar"
 import { ShareProjectDialog } from "@/components/editor/share-project-dialog"
@@ -58,15 +59,8 @@ function EditorWorkspace({
           sharedProjects={sharedProjects}
         />
 
-        <main className="flex min-w-0 flex-1 items-center justify-center bg-black/30 p-8">
-          <div className="max-w-md text-center">
-            <h2 className="font-heading text-lg font-medium">
-              Canvas workspace
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              The canvas for {project.name} will appear here.
-            </p>
-          </div>
+        <main className="min-w-0 flex-1 bg-background">
+          <EditorCanvas roomId={project.id} />
         </main>
 
         {isAiSidebarOpen && <AiSidebarPlaceholder />}
