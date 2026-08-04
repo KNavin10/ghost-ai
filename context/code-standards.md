@@ -51,3 +51,11 @@
 - `[folder]/` — [What belongs here]
 - `[folder]/` — [What belongs here]
 - `[folder]/` — [What belongs here]s
+
+## Canvas Rendering
+
+- Treat `CanvasNodeData.shape` as a rendering contract. Every supported shape must map exhaustively to a visibly distinct silhouette; dimensions and payload values alone do not count as shape support.
+- When adding or changing canvas shapes, verify the renderer and visually check rectangle, diamond, circle, pill, cylinder, and hexagon after drop.
+- Keep the React Flow surface visually continuous with the editor workspace and use application theme tokens for the canvas, grid, nodes, and minimap.
+- Never call drag-and-drop shape work complete when the stored discriminator is ignored by the custom node renderer.
+- When a canvas background is intended to be starry, do not use one low-opacity grid token. Layer uniquely identified React Flow dot patterns with token-derived contrast and varied size, spacing, and offset, then verify visibility while zoomed in and out.

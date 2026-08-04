@@ -3,6 +3,8 @@ import "server-only"
 import { auth, currentUser } from "@clerk/nextjs/server"
 
 type CurrentClerkIdentity = {
+  avatarUrl: string
+  displayName: string
   primaryEmail: string | null
   userId: string
 }
@@ -22,9 +24,14 @@ async function getCurrentClerkIdentity(): Promise<CurrentClerkIdentity | null> {
 
   const user = await currentUser()
 
+  const primaryEmail =
+    user?.primaryEmailAddress?.emailAddress.trim().toLowerCase() ?? null
+
   return {
-    primaryEmail:
-      user?.primaryEmailAddress?.emailAddress.trim().toLowerCase() ?? null,
+    avatarUrl: user?.imageUrl ?? "",
+    displayName:
+      user?.fullName ?? user?.username ?? primaryEmail ?? "Anonymous user",
+    primaryEmail,
     userId,
   }
 }

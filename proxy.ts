@@ -15,14 +15,18 @@ function isPublicAuthRoute(pathname: string) {
   );
 }
 
-function isProjectApiRoute(pathname: string) {
-  return pathname === "/api/projects" || pathname.startsWith("/api/projects/");
+function usesHandlerAuthentication(pathname: string) {
+  return (
+    pathname === "/api/liveblocks-auth" ||
+    pathname === "/api/projects" ||
+    pathname.startsWith("/api/projects/")
+  );
 }
 
 export default clerkMiddleware(async (auth, request) => {
   if (
     isPublicAuthRoute(request.nextUrl.pathname) ||
-    isProjectApiRoute(request.nextUrl.pathname)
+    usesHandlerAuthentication(request.nextUrl.pathname)
   ) {
     return;
   }
