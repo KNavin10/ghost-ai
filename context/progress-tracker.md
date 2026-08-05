@@ -5,7 +5,7 @@ change.
 
 ## Current Phase
 
-- Complete — Starry canvas background
+- Complete — Starter templates
 
 ## Current Goal
 
@@ -59,6 +59,21 @@ change.
 - Replaced the faint single dot grid with three uniquely identified React Flow star layers that vary token-derived brightness, size, spacing, and offset while sharing the canvas background.
 - Documented the faint-grid report, its zoom-scaled contrast cause, and permanent multi-zoom star-field checks in the issue record, shape-panel specification, and code standards.
 - Added root `.coderabbit.yaml` path filters so CodeRabbit reviews TypeScript/TSX and configuration files while excluding Markdown, MDX, the entire `context/` tree, generated output, dependencies, and lockfiles.
+- Replaced the canvas node placeholder with CSS rectangle, circle, and pill renderers plus scalable SVG diamond, cylinder, and hexagon renderers, including selected-state borders.
+- Added a cursor-attached shape ghost preview that reuses each panel shape's default size and clears after drag completion, drop, or cancellation.
+- Added selected-node resize handles with enforced minimum dimensions through the existing Liveblocks React Flow change flow.
+- Added centered inline node-label editing with empty-label placeholders, blur/Escape closing, canvas-interaction guards, and native content-sized textarea behavior that remains vertically centered while typing.
+- Added top, right, bottom, and left connection handles to every custom shape; users can create visible foreground-token lines through the existing Liveblocks edge flow.
+- Added a selected-node color toolbar with predefined application-theme background/text pairs, active swatches, controlled text-color glows, and React Flow interaction guards.
+- Expanded the selected-node color toolbar into a blue-to-red spectrum with cyan, green, amber, orange, rose, and violet options, each paired with high-contrast label text.
+- Added subtle top, right, bottom, and left node handles that reveal on hover and use white dots with dark borders.
+- Added the custom canvas edge renderer with smooth-step routing, rounded light strokes, dimmed rest state, active hover/selection emphasis, arrowheads, and a wider invisible interaction path.
+- Added collaborative inline edge label editing with midpoint placement from `getSmoothStepPath`, growing inputs, blur/Enter/Escape commits, pill badges, and an active-edge empty-label hint.
+- Added a bottom-left canvas control bar with animated zoom, fit-view, undo, and redo actions, including disabled Liveblocks history states.
+- Added `hooks/use-keyboard-shortcuts` for zoom, undo, and redo shortcuts that ignore inputs, textareas, selects, and editable text fields.
+- Added three typed starter canvas templates for microservices, CI/CD, and event-driven diagrams, including reusable node and edge helpers.
+- Added a scrollable starter-template import dialog with lightweight SVG previews that calculate bounds, draw edges, and render each canvas node shape and color.
+- Added a Templates navbar entry that replaces the collaborative canvas contents through the existing Liveblocks node and edge change flow, then fits the view.
 
 ## In Progress
 
@@ -66,7 +81,7 @@ change.
 
 ## Next Up
 
-- Define the next feature spec after shape creation.
+- Define the next feature spec after starter templates.
 
 ## Open Questions
 
@@ -89,6 +104,11 @@ change.
 - Treat the stored canvas shape discriminator as a renderer contract: every supported value must produce its own visible silhouette and be checked in the rendered canvas, not only in drag payload data.
 - Build decorative React Flow backgrounds from uniquely identified, transparent overlay layers so later patterns do not hide earlier ones and all colors remain derived from application theme tokens.
 - Keep automated review scope explicit: review source and configuration extensions, and exclude documentation/context trees and generated dependency metadata.
+- Use one source handle on each side of a canvas node with React Flow loose connection mode; the same handles create and accept synchronized edges without overlapping source/target controls.
+- Keep node color choices as paired background/text theme values and update them through the existing Liveblocks React Flow replace-change flow.
+- Keep edge labels in `CanvasEdge.data.label` and update them through the existing Liveblocks React Flow edge replace-change flow.
+- Keep canvas viewport controls local to React Flow while routing history actions through Liveblocks hooks; keyboard shortcuts share those same handlers and skip editable targets.
+- Keep predefined template imports inside the existing Liveblocks flow state: remove the current room nodes and edges, add the selected template, and fit the view without server persistence.
 
 ## Session Notes
 
@@ -112,3 +132,12 @@ change.
 - Canvas visual-fix verification passed: `npm run lint`, `tsc --noEmit`, and `npm run build`; the renderer exhaustively covers all six `CanvasShape` values, and the supplied broken-state screenshot was checked against the corrected token-based surface treatment. Interactive live-room drag/drop remains unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
 - Starry canvas background verification passed: `npm run lint`, `tsc --noEmit`, `npm run build`, and `git diff --check`; installed React Flow source confirms dot size scales with zoom, and the canvas now uses three uniquely identified transparent overlay patterns with stronger token-derived contrast. Live zoom-level visual verification remains manual because no connected browser was available in this session.
 - CodeRabbit configuration validation passed: `.coderabbit.yaml` parses successfully with the installed YAML parser, and `git diff --check` reports no whitespace errors.
+- Node-shape verification passed: all six shape variants remain connected to the Liveblocks canvas state, and the shape drag preview is limited to drag/drop feedback without changing node creation behavior.
+- Node-editing verification passed: `npm run lint`, `npm run build`, and `git diff --check` pass; resize dimensions and label replacements use the existing Liveblocks node-change flow. Interactive live-room verification remains unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
+- Node-label editing uses native content sizing rather than JavaScript height resets, so the centered editing surface and its text do not jump between keystrokes.
+- The reference screenshot exposed an incomplete part of node editing: the canvas had synchronized React Flow edge state, but custom nodes lacked source/target handles. Four side handles now create and accept visible Liveblocks-synchronized lines, and `npm run lint` plus `npm run build` pass.
+- Node color toolbar verification passed: `npm run lint` and `npm run build` pass; swatches use `nodrag`, `nopan`, and `nowheel` guards, and update the selected node entirely through the collaborative canvas node-change flow with no server calls. Interactive live-room verification remains unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
+- Node color contrast refinement verified: `npm run lint`, `npm run build`, and `git diff --check` pass; labels now use bright paired foregrounds, a medium weight, and a controlled dark text shadow so they remain legible across every saturated shape fill. Interactive live-room verification remains unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
+- Edge behavior verification passed: `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `git diff --check`; new connections are registered as `canvasEdge` with arrow defaults, and edge labels use the collaborative edge replacement flow. Interactive live-room connection and label editing remain unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
+- Canvas ergonomics verification passed: `npm run lint`, `npx tsc --noEmit`, and `git diff --check`; the control bar uses animated React Flow viewport actions, Liveblocks history availability state, and shared keyboard handlers. Interactive live-room history verification remains unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
+- Starter-template verification passed: `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `git diff --check`; interactive import remains dependent on a configured Liveblocks room.

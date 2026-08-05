@@ -82,6 +82,28 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+    --node-blue: oklch(0.42 0.14 250);
+    --node-blue-foreground: oklch(0.94 0.04 250);
+    --node-cyan: oklch(0.42 0.12 215);
+    --node-cyan-foreground: oklch(0.94 0.04 215);
+    --node-teal: oklch(0.4 0.1 180);
+    --node-teal-foreground: oklch(0.94 0.04 180);
+    --node-green: oklch(0.4 0.11 145);
+    --node-green-foreground: oklch(0.94 0.04 145);
+    --node-lime: oklch(0.45 0.11 125);
+    --node-lime-foreground: oklch(0.96 0.05 125);
+    --node-yellow: oklch(0.48 0.11 95);
+    --node-yellow-foreground: oklch(0.97 0.05 95);
+    --node-amber: oklch(0.46 0.13 75);
+    --node-amber-foreground: oklch(0.96 0.05 75);
+    --node-orange: oklch(0.44 0.14 55);
+    --node-orange-foreground: oklch(0.96 0.04 55);
+    --node-red: oklch(0.42 0.16 30);
+    --node-red-foreground: oklch(0.95 0.04 30);
+    --node-rose: oklch(0.42 0.15 5);
+    --node-rose-foreground: oklch(0.95 0.04 5);
+    --node-violet: oklch(0.4 0.14 310);
+    --node-violet-foreground: oklch(0.94 0.04 310);
 }
 
 .dark {
