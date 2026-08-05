@@ -19,6 +19,15 @@ type ShapeOption = ShapeDragPayload & {
   label: string
 }
 
+type ShapePanelProps = {
+  onShapeDrag?: (event: DragEvent<HTMLElement>, payload: ShapeDragPayload) => void
+  onShapeDragEnd?: () => void
+  onShapeDragStart?: (
+    event: DragEvent<HTMLElement>,
+    payload: ShapeDragPayload
+  ) => void
+}
+
 const SHAPE_OPTIONS: ShapeOption[] = [
   {
     shape: "rectangle",
@@ -66,7 +75,11 @@ const SHAPE_OPTIONS: ShapeOption[] = [
 
 const canvasShapeSet = new Set<string>(CANVAS_SHAPES)
 
-function ShapePanel() {
+function ShapePanel({
+  onShapeDrag,
+  onShapeDragEnd,
+  onShapeDragStart,
+}: ShapePanelProps) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-5 z-10 flex justify-center px-4">
       <div
@@ -83,7 +96,12 @@ function ShapePanel() {
               className="cursor-grab rounded-full active:cursor-grabbing"
               draggable
               key={option.shape}
-              onDragStart={(event) => handleDragStart(event, option)}
+              onDrag={(event) => onShapeDrag?.(event, option)}
+              onDragEnd={onShapeDragEnd}
+              onDragStart={(event) => {
+                handleDragStart(event, option)
+                onShapeDragStart?.(event, option)
+              }}
               size="icon"
               title={option.label}
               type="button"
@@ -149,3 +167,4 @@ function isShapeDragPayload(payload: unknown): payload is ShapeDragPayload {
 }
 
 export { readShapeDragPayload, SHAPE_DRAG_TYPE, ShapePanel }
+export type { ShapePanelProps }

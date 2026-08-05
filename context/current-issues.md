@@ -2,6 +2,30 @@
 
 No unresolved editor-canvas issues are documented at this time.
 
+## Resolved — Canvas nodes can create visible connections
+
+### Reported behavior
+
+- The reference screenshot shows shapes acting as graph nodes with visible connection points and lines between them.
+- The current canvas renders and edits shapes, but users cannot drag from one shape to another to create a visible line.
+
+### Root cause
+
+- `editor-canvas.tsx` already provides Liveblocks-synchronized edge state and passes its `onConnect` handler to React Flow.
+- `canvas-node.tsx` does not render React Flow source or target handles, so there is no user-facing connection point from which an edge can begin or end.
+
+### Resolution
+
+- Each custom shape now exposes a source handle on its top, right, bottom, and left edges. Handles are clear when selected and reveal on hover for a connection target without changing a shape's silhouette.
+- The canvas keeps `ConnectionMode.Loose`, allowing these source handles to accept an incoming connection as well as start one without duplicate overlapping handle controls.
+- Created edges continue through the existing `useLiveblocksFlow` `onConnect` handler and render with the foreground-token line treatment.
+
+### Regression checks
+
+- Drag from a source handle on one shape to a target handle on another and confirm that a line is rendered between them.
+- Confirm a second connected client receives the same edge and that resizing or editing either endpoint does not remove it.
+- Verify each supported shape exposes usable handles without changing its silhouette or centered label behavior.
+
 ## Resolved — Faint canvas dots did not read as a starry night
 
 ### Reported behavior

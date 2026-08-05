@@ -4,6 +4,7 @@ import { useState } from "react"
 import { UserButton } from "@clerk/nextjs"
 import {
   Bot,
+  LayoutTemplate,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
@@ -32,6 +33,7 @@ function EditorWorkspace({
   const [isProjectSidebarOpen, setIsProjectSidebarOpen] = useState(false)
   const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(true)
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
+  const [isStarterTemplatesOpen, setIsStarterTemplatesOpen] = useState(false)
   const projectActions = useProjectActions({ activeProjectId: project.id })
 
   return (
@@ -44,6 +46,7 @@ function EditorWorkspace({
           setIsProjectSidebarOpen((isOpen) => !isOpen)
         }
         onShare={() => setIsShareDialogOpen(true)}
+        onStarterTemplates={() => setIsStarterTemplatesOpen(true)}
         projectName={project.name}
       />
 
@@ -60,7 +63,11 @@ function EditorWorkspace({
         />
 
         <main className="min-w-0 flex-1 bg-background">
-          <EditorCanvas roomId={project.id} />
+          <EditorCanvas
+            isStarterTemplatesOpen={isStarterTemplatesOpen}
+            onStarterTemplatesOpenChange={setIsStarterTemplatesOpen}
+            roomId={project.id}
+          />
         </main>
 
         {isAiSidebarOpen && <AiSidebarPlaceholder />}
@@ -84,6 +91,7 @@ type WorkspaceNavbarProps = {
   onAiSidebarToggle: () => void
   onProjectSidebarToggle: () => void
   onShare: () => void
+  onStarterTemplates: () => void
   projectName: string
 }
 
@@ -93,6 +101,7 @@ function WorkspaceNavbar({
   onAiSidebarToggle,
   onProjectSidebarToggle,
   onShare,
+  onStarterTemplates,
   projectName,
 }: WorkspaceNavbarProps) {
   const ProjectSidebarIcon = isProjectSidebarOpen
@@ -135,6 +144,15 @@ function WorkspaceNavbar({
         >
           <Share2 />
           <span className="hidden sm:inline">Share</span>
+        </Button>
+        <Button
+          aria-label="Open starter templates"
+          onClick={onStarterTemplates}
+          type="button"
+          variant="outline"
+        >
+          <LayoutTemplate />
+          <span className="hidden sm:inline">Templates</span>
         </Button>
         <Button
           aria-label={aiSidebarLabel}
