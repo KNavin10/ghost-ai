@@ -329,7 +329,7 @@ function ShapePreview({
         height,
         left: x,
         top: y,
-        transform: "translate(12px, 12px)",
+        transform: "translate(-50%, -50%)",
         width,
       }}
     >

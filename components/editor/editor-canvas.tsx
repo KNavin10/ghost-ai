@@ -1,13 +1,14 @@
 "use client"
 
-import { useCallback, useState } from "react"
-import type { DragEvent } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import type { DragEvent, MouseEvent as ReactMouseEvent } from "react"
 import { useLiveblocksFlow } from "@liveblocks/react-flow"
 import {
   useCanRedo,
   useCanUndo,
   useRedo,
   useUndo,
+  useUpdateMyPresence,
 } from "@liveblocks/react/suspense"
 import {
   ClientSideSuspense,
@@ -22,6 +23,8 @@ import {
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
+  useEdges,
+  useNodes,
   useReactFlow,
 } from "@xyflow/react"
 import type { Connection } from "@xyflow/react"
@@ -38,11 +41,17 @@ import {
 } from "@/components/editor/canvas-edge"
 import { CanvasControls } from "@/components/editor/canvas-controls"
 import {
+  CanvasPresence,
+  getCursorPosition,
+} from "@/components/editor/canvas-presence"
+import {
   CANVAS_TEMPLATES,
   type CanvasTemplate,
 } from "@/components/editor/starter-templates"
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
+import { useCanvasAutosave } from "@/hooks/use-canvas-autosave"
+import type { SaveStatus } from "@/hooks/use-canvas-autosave"
 import {
   readShapeDragPayload,
   ShapePanel,
@@ -59,6 +68,8 @@ import "@xyflow/react/dist/style.css"
 
 type EditorCanvasProps = {
   isStarterTemplatesOpen: boolean
+  onSaveHandlerReady?: (handler: () => Promise<boolean>) => void
+  onSaveStatusChange?: (status: SaveStatus) => void
   onStarterTemplatesOpenChange: (open: boolean) => void
   roomId: string
 }
@@ -76,6 +87,8 @@ let canvasNodeCounter = 0
 
 function EditorCanvas({
   isStarterTemplatesOpen,
+  onSaveHandlerReady,
+  onSaveStatusChange,
   onStarterTemplatesOpenChange,
   roomId,
 }: EditorCanvasProps) {
@@ -85,12 +98,15 @@ function EditorCanvas({
         <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
           <RoomProvider
             id={roomId}
-            initialPresence={{ cursor: null, isThinking: false }}
+            initialPresence={{ cursor: null, thinking: false }}
           >
             <ClientSideSuspense fallback={<CanvasLoading />}>
               <CollaborativeCanvas
                 isStarterTemplatesOpen={isStarterTemplatesOpen}
+                onSaveHandlerReady={onSaveHandlerReady}
+                onSaveStatusChange={onSaveStatusChange}
                 onStarterTemplatesOpenChange={onStarterTemplatesOpenChange}
+                roomId={roomId}
               />
             </ClientSideSuspense>
           </RoomProvider>
@@ -102,13 +118,19 @@ function EditorCanvas({
 
 function CollaborativeCanvas({
   isStarterTemplatesOpen,
+  onSaveHandlerReady,
+  onSaveStatusChange,
   onStarterTemplatesOpenChange,
-}: Pick<EditorCanvasProps, "isStarterTemplatesOpen" | "onStarterTemplatesOpenChange">) {
+  roomId,
+}: EditorCanvasProps) {
   return (
     <ReactFlowProvider>
       <CollaborativeCanvasContent
         isStarterTemplatesOpen={isStarterTemplatesOpen}
+        onSaveHandlerReady={onSaveHandlerReady}
+        onSaveStatusChange={onSaveStatusChange}
         onStarterTemplatesOpenChange={onStarterTemplatesOpenChange}
+        roomId={roomId}
       />
     </ReactFlowProvider>
   )
@@ -116,15 +138,22 @@ function CollaborativeCanvas({
 
 function CollaborativeCanvasContent({
   isStarterTemplatesOpen,
+  onSaveHandlerReady,
+  onSaveStatusChange,
   onStarterTemplatesOpenChange,
-}: Pick<EditorCanvasProps, "isStarterTemplatesOpen" | "onStarterTemplatesOpenChange">) {
+  roomId,
+}: EditorCanvasProps) {
   const [shapePreview, setShapePreview] = useState<ShapePreviewState | null>(
     null
   )
   const reactFlow = useReactFlow<CanvasNode, CanvasEdge>()
   const { screenToFlowPosition } = reactFlow
+  const flowNodes = useNodes<CanvasNode>()
+  const flowEdges = useEdges<CanvasEdge>()
+  const canvasWrapperRef = useRef<HTMLDivElement>(null)
   const undo = useUndo()
   const redo = useRedo()
+  const updateMyPresence = useUpdateMyPresence()
   const canUndo = useCanUndo()
   const canRedo = useCanRedo()
   const {
@@ -139,6 +168,117 @@ function CollaborativeCanvasContent({
     nodes: { initial: [] },
     edges: { initial: [] },
   })
+
+  useEffect(() => {
+    const wrapper = canvasWrapperRef.current
+    if (!wrapper) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Delete" && event.key !== "Backspace") {
+        return
+      }
+
+      const target = event.target as HTMLElement | null
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable ||
+          target.closest('[contenteditable="true"]'))
+      ) {
+        return
+      }
+
+      const selectedNodes = flowNodes.filter((node) => node.selected)
+      const selectedEdges = flowEdges.filter((edge) => edge.selected)
+
+      if (selectedNodes.length > 0 || selectedEdges.length > 0) {
+        event.preventDefault()
+        onDelete({ nodes: selectedNodes, edges: selectedEdges })
+      }
+    }
+
+    wrapper.addEventListener("keydown", handleKeyDown)
+    return () => {
+      wrapper.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [flowEdges, flowNodes, onDelete])
+
+  const { saveStatus, triggerSave } = useCanvasAutosave({
+    edges,
+    nodes,
+    projectId: roomId,
+  })
+
+  const hasLoadedSavedStateRef = useRef(false)
+
+  useEffect(() => {
+    if (onSaveStatusChange) {
+      onSaveStatusChange(saveStatus)
+    }
+  }, [onSaveStatusChange, saveStatus])
+
+  useEffect(() => {
+    if (onSaveHandlerReady) {
+      onSaveHandlerReady(triggerSave)
+    }
+  }, [onSaveHandlerReady, triggerSave])
+
+  useEffect(() => {
+    if (hasLoadedSavedStateRef.current) {
+      return
+    }
+
+    if (nodes.length > 0 || edges.length > 0) {
+      hasLoadedSavedStateRef.current = true
+      return
+    }
+
+    async function loadSavedCanvas() {
+      try {
+        const response = await fetch(`/api/projects/${roomId}/canvas`)
+        if (!response.ok) {
+          hasLoadedSavedStateRef.current = true
+          return
+        }
+
+        const data = (await response.json()) as {
+          edges?: CanvasEdge[]
+          nodes?: CanvasNode[]
+        }
+
+        const fetchedNodes = Array.isArray(data.nodes) ? data.nodes : []
+        const fetchedEdges = Array.isArray(data.edges) ? data.edges : []
+
+        if (fetchedNodes.length > 0 || fetchedEdges.length > 0) {
+          if (nodes.length === 0 && edges.length === 0) {
+            if (fetchedNodes.length > 0) {
+              onNodesChange(
+                fetchedNodes.map((node) => ({
+                  item: node,
+                  type: "add" as const,
+                }))
+              )
+            }
+            if (fetchedEdges.length > 0) {
+              onEdgesChange(
+                fetchedEdges.map((edge) => ({
+                  item: edge,
+                  type: "add" as const,
+                }))
+              )
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load saved canvas from Vercel Blob:", error)
+      } finally {
+        hasLoadedSavedStateRef.current = true
+      }
+    }
+
+    void loadSavedCanvas()
+  }, [edges.length, nodes.length, onEdgesChange, onNodesChange, roomId])
 
   useKeyboardShortcuts({
     onRedo: redo,
@@ -156,6 +296,17 @@ function CollaborativeCanvasContent({
     },
     [onConnect]
   )
+
+  const handleCanvasMouseMove = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      updateMyPresence({ cursor: getCursorPosition(event) })
+    },
+    [updateMyPresence]
+  )
+
+  const handleCanvasMouseLeave = useCallback(() => {
+    updateMyPresence({ cursor: null })
+  }, [updateMyPresence])
 
   const handleDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
@@ -199,10 +350,15 @@ function CollaborativeCanvasContent({
         return
       }
 
-      const position = screenToFlowPosition({
+      const centerFlowPosition = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       })
+
+      const position = {
+        x: centerFlowPosition.x - payload.width / 2,
+        y: centerFlowPosition.y - payload.height / 2,
+      }
 
       canvasNodeCounter += 1
 
@@ -332,9 +488,11 @@ function CollaborativeCanvasContent({
 
   return (
     <div
-      className="relative h-full w-full"
+      className="relative h-full w-full outline-none"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      ref={canvasWrapperRef}
+      tabIndex={0}
     >
       <CanvasNodeEditingProvider
         onColorChange={handleNodeColorChange}
@@ -361,6 +519,7 @@ function CollaborativeCanvasContent({
               },
               type: "canvasEdge",
             }}
+            deleteKeyCode={null}
             edgeTypes={edgeTypes}
             edges={edges}
             fitView
@@ -369,6 +528,8 @@ function CollaborativeCanvasContent({
             onConnect={handleConnect}
             onDelete={onDelete}
             onEdgesChange={onEdgesChange}
+            onMouseLeave={handleCanvasMouseLeave}
+            onMouseMove={handleCanvasMouseMove}
             onNodesChange={onNodesChange}
           >
             <MiniMap
@@ -407,6 +568,7 @@ function CollaborativeCanvasContent({
           </ReactFlow>
         </CanvasEdgeEditingProvider>
       </CanvasNodeEditingProvider>
+      <CanvasPresence />
       <ShapePanel
         onShapeDrag={handleShapeDrag}
         onShapeDragEnd={handleShapeDragEnd}
