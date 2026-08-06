@@ -7,7 +7,7 @@ declare global {
   interface Liveblocks {
     Presence: {
       cursor: CursorPosition | null
-      isThinking: boolean
+      thinking: boolean
     }
 
     Storage: Record<string, never>

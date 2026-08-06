@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button"
 type EditorNavbarProps = {
   isSidebarOpen: boolean
   onSidebarToggle: () => void
+  showUserButton?: boolean
 }
 
 function EditorNavbar({
   isSidebarOpen,
   onSidebarToggle,
+  showUserButton = true,
 }: EditorNavbarProps) {
   const ToggleIcon = isSidebarOpen ? PanelLeftClose : PanelLeftOpen
   const toggleLabel = isSidebarOpen ? "Close projects sidebar" : "Open projects sidebar"
@@ -36,7 +38,7 @@ function EditorNavbar({
       <div className="flex flex-1 items-center justify-center" />
 
       <div className="flex flex-1 items-center justify-end px-3">
-        <UserButton />
+        {showUserButton ? <UserButton /> : null}
       </div>
     </header>
   )

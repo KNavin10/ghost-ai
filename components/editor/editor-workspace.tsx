@@ -1,23 +1,27 @@
 "use client"
 
-import { useState } from "react"
-import { UserButton } from "@clerk/nextjs"
+import { useCallback, useRef, useState } from "react"
 import {
-  Bot,
+  AlertCircle,
+  Check,
   LayoutTemplate,
+  Loader2,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
+  Save,
   Share2,
 } from "lucide-react"
 
 import { EditorCanvas } from "@/components/editor/editor-canvas"
+import { AiSidebar } from "@/components/editor/ai-sidebar"
 import { ProjectDialogs } from "@/components/editor/project-dialogs"
 import { ProjectSidebar } from "@/components/editor/project-sidebar"
 import { ShareProjectDialog } from "@/components/editor/share-project-dialog"
 import { Button } from "@/components/ui/button"
 import { useProjectActions } from "@/hooks/use-project-actions"
+import type { SaveStatus } from "@/hooks/use-canvas-autosave"
 import type { AccessibleProject } from "@/lib/project-access"
 import type { ProjectLists } from "@/lib/project-types"
 
@@ -34,7 +38,23 @@ function EditorWorkspace({
   const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(true)
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const [isStarterTemplatesOpen, setIsStarterTemplatesOpen] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
+  const saveHandlerRef = useRef<(() => Promise<boolean>) | null>(null)
+
   const projectActions = useProjectActions({ activeProjectId: project.id })
+
+  const handleSave = useCallback(() => {
+    if (saveHandlerRef.current) {
+      void saveHandlerRef.current()
+    }
+  }, [])
+
+  const handleSaveHandlerReady = useCallback(
+    (handler: () => Promise<boolean>) => {
+      saveHandlerRef.current = handler
+    },
+    []
+  )
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-background">
@@ -45,9 +65,11 @@ function EditorWorkspace({
         onProjectSidebarToggle={() =>
           setIsProjectSidebarOpen((isOpen) => !isOpen)
         }
+        onSave={handleSave}
         onShare={() => setIsShareDialogOpen(true)}
         onStarterTemplates={() => setIsStarterTemplatesOpen(true)}
         projectName={project.name}
+        saveStatus={saveStatus}
       />
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
@@ -65,12 +87,17 @@ function EditorWorkspace({
         <main className="min-w-0 flex-1 bg-background">
           <EditorCanvas
             isStarterTemplatesOpen={isStarterTemplatesOpen}
+            onSaveHandlerReady={handleSaveHandlerReady}
+            onSaveStatusChange={setSaveStatus}
             onStarterTemplatesOpenChange={setIsStarterTemplatesOpen}
             roomId={project.id}
           />
         </main>
 
-        {isAiSidebarOpen && <AiSidebarPlaceholder />}
+        <AiSidebar
+          isOpen={isAiSidebarOpen}
+          onOpenChange={setIsAiSidebarOpen}
+        />
       </div>
 
       <ProjectDialogs dialogs={projectActions} />
@@ -90,9 +117,11 @@ type WorkspaceNavbarProps = {
   isProjectSidebarOpen: boolean
   onAiSidebarToggle: () => void
   onProjectSidebarToggle: () => void
+  onSave: () => void
   onShare: () => void
   onStarterTemplates: () => void
   projectName: string
+  saveStatus: SaveStatus
 }
 
 function WorkspaceNavbar({
@@ -100,9 +129,11 @@ function WorkspaceNavbar({
   isProjectSidebarOpen,
   onAiSidebarToggle,
   onProjectSidebarToggle,
+  onSave,
   onShare,
   onStarterTemplates,
   projectName,
+  saveStatus,
 }: WorkspaceNavbarProps) {
   const ProjectSidebarIcon = isProjectSidebarOpen
     ? PanelLeftClose
@@ -114,6 +145,40 @@ function WorkspaceNavbar({
   const aiSidebarLabel = isAiSidebarOpen
     ? "Close AI sidebar"
     : "Open AI sidebar"
+
+  const renderSaveContent = () => {
+    switch (saveStatus) {
+      case "saving":
+        return (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <span className="hidden sm:inline">Saving...</span>
+          </>
+        )
+      case "saved":
+        return (
+          <>
+            <Check className="h-4 w-4 text-emerald-500" />
+            <span className="hidden text-emerald-500 sm:inline">Saved</span>
+          </>
+        )
+      case "error":
+        return (
+          <>
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <span className="hidden text-destructive sm:inline">Error</span>
+          </>
+        )
+      case "idle":
+      default:
+        return (
+          <>
+            <Save className="h-4 w-4" />
+            <span className="hidden sm:inline">Save</span>
+          </>
+        )
+    }
+  }
 
   return (
     <header className="z-50 flex h-12 shrink-0 items-center border-b border-border bg-card px-3">
@@ -136,6 +201,15 @@ function WorkspaceNavbar({
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5">
+        <Button
+          aria-label="Save canvas"
+          disabled={saveStatus === "saving"}
+          onClick={onSave}
+          type="button"
+          variant={saveStatus === "error" ? "destructive" : "outline"}
+        >
+          {renderSaveContent()}
+        </Button>
         <Button
           aria-label="Share project"
           onClick={onShare}
@@ -165,28 +239,8 @@ function WorkspaceNavbar({
           <AiSidebarIcon />
           <span className="sr-only">{aiSidebarLabel}</span>
         </Button>
-        <UserButton />
       </div>
     </header>
-  )
-}
-
-function AiSidebarPlaceholder() {
-  return (
-    <aside
-      aria-label="AI sidebar"
-      className="absolute inset-y-0 right-0 z-20 flex w-80 max-w-full shrink-0 flex-col border-l border-border bg-card shadow-2xl md:static md:shadow-none"
-    >
-      <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
-        <Bot aria-hidden="true" className="size-4 text-muted-foreground" />
-        <h2 className="font-heading text-sm font-medium">AI assistant</h2>
-      </div>
-      <div className="flex flex-1 items-center justify-center p-6 text-center">
-        <p className="max-w-48 text-sm leading-6 text-muted-foreground">
-          AI chat will appear here in a future step.
-        </p>
-      </div>
-    </aside>
   )
 }
 

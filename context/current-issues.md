@@ -1,6 +1,48 @@
 # Current Issues
 
-No unresolved editor-canvas issues are documented at this time.
+## Issues
+
+### 2. Delete Nodes and Edges
+
+Add a keydown event listener to the canvas wrapper that:
+
+- listens for Delete and Backspace keys
+- does not fire when the event target is an input, textarea, or contenteditable element
+- gets currently selected nodes using useNodes() filtered by selected state
+- gets currently selected edges using useEdges() filtered by selected state
+- removes them using the existing Liveblocks collaborative mutation helpers
+
+Do not use React Flow's built-in deleteKeyCode or any React Flow keyboard deletion behavior. All deletions must go through the existing Liveblocks collaborative state so they sync across all connected clients in real time.
+
+Do not change anything else.
+
+### 3. Drag and Drop Position Offset
+Read Liveblocks agent skills before implementing this.
+When dropping a shape from the shape panel onto the canvas, the node places below where the cursor actually is.
+Check the drop handler in the canvas wrapper. The position calculation must account for:
+- the drag offset from where the user grabbed the shape inside the drag element, not just the element's top-left corner
+- the canvas container's bounding rect
+- the current React Flow pan offset and zoom scale via screenToFlowPosition or project
+The node should appear with its center at the exact cursor position on drop.
+### 4. Collaborator Avatar Image Error
+
+Check Clerk agent skills before implementing this.
+
+Add img.clerk.com to the allowed image hostnames in next.config.js using the correct remotePatterns configuration.
+
+### 5. Remove UserButton from Workspace Navbar
+
+Check Clerk agent skills before implementing this.
+
+Remove the UserButton from the workspace navbar only. The navbar is shared so make sure the UserButton remains on the editor home navbar. Conditionally render it based on whether the component is being used in the workspace context or editor home context.
+
+## Scope
+
+- Fix only what is listed above
+- Do not change canvas node or edge rendering behavior
+- Do not modify the editor home navbar layout
+- Do not break existing autosave, presence, or collaboration logic
+- npm run build passes
 
 ## Resolved — Canvas nodes can create visible connections
 

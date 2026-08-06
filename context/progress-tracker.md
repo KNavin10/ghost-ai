@@ -1,18 +1,16 @@
 # Progress Tracker
+# Progress Tracker
 
 Update this file after every meaningful implementation
 change.
 
 ## Current Phase
 
-- Complete — Starter templates
+- Complete — Canvas Autosave & Vercel Blob Integration
 
 ## Current Goal
 
 - None.
-
-## Completed
-
 - Reviewed the project context files and design-system specification.
 - Initialized shadcn/ui with the Base Nova style and Tailwind CSS variables.
 - Added Button, Card, Dialog, Input, Tabs, Textarea, and Scrollarea primitives.
@@ -74,6 +72,19 @@ change.
 - Added three typed starter canvas templates for microservices, CI/CD, and event-driven diagrams, including reusable node and edge helpers.
 - Added a scrollable starter-template import dialog with lightweight SVG previews that calculate bounds, draw edges, and render each canvas node shape and color.
 - Added a Templates navbar entry that replaces the collaborative canvas contents through the existing Liveblocks node and edge change flow, then fits the view.
+- Added canvas-only Liveblocks presence avatars with Clerk's current-user `UserButton`, collaborator filtering, profile-photo/initial fallbacks, five-avatar overflow, and conditional dividers.
+- Added Liveblocks cursor broadcasting from React Flow mouse events, cleared cursors on canvas leave, and rendered colored collaborator pointers and name badges without changing node or edge behavior.
+- Separated the AI sidebar into a controlled floating component with preserved right-side slide animation and token-based surface styling.
+- Added the AI Workspace header, AI Architect and Specs tabs, local demo chat interactions, starter prompts, composer keyboard behavior, generate-spec action, and static demo spec card.
+- Adjusted the AI Architect spacing and arrangement to match the supplied reference while preserving the existing color and border-radius treatment.
+- Reduced the AI Architect composer footprint so the scrollable chat history takes most of the sidebar, and placed the tabs in a distinct bordered section below the header.
+- Made both tab panels explicit flex containers so the active AI Architect content fills all remaining vertical space above the composer.
+- Installed `@vercel/blob` and integrated Vercel Blob storage for canvas state persistence.
+- Implemented `PUT /api/projects/[projectId]/canvas` to upload canvas JSON to Vercel Blob and update `canvasJsonPath` on the Prisma project record.
+- Implemented `GET /api/projects/[projectId]/canvas` to fetch canvas state from Vercel Blob when loading project editor sessions.
+- Added `hooks/use-canvas-autosave.ts` with 2-second debounced autosave, manual save triggers, and transient state management.
+- Loaded saved canvas state from Vercel Blob when initializing an empty Liveblocks room while skipping fetch if nodes or edges exist.
+- Added manual Save button and visual status indicator (`Save`, `Saving...`, `Saved`, `Error`) to the editor top workspace navbar.
 
 ## In Progress
 
@@ -109,6 +120,9 @@ change.
 - Keep edge labels in `CanvasEdge.data.label` and update them through the existing Liveblocks React Flow edge replace-change flow.
 - Keep canvas viewport controls local to React Flow while routing history actions through Liveblocks hooks; keyboard shortcuts share those same handlers and skip editable targets.
 - Keep predefined template imports inside the existing Liveblocks flow state: remove the current room nodes and edges, add the selected template, and fit the view without server persistence.
+- Keep presence UI inside the editor canvas room view, filter participants by the Clerk user ID, and leave the shared/editor-home navbar unchanged.
+- Keep the AI sidebar controlled by the workspace while keeping chat and spec content local until backend and AI generation work is specified.
+- Store project canvas JSON in Vercel Blob via `@vercel/blob` `put()` with `addRandomSuffix: false`, and keep Prisma responsible for storing metadata and the blob URL in `canvasJsonPath`.
 
 ## Session Notes
 
