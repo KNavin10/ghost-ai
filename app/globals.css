@@ -151,3 +151,23 @@
     @apply font-sans;
     }
 }
+
+/* Hide Liveblocks watermark / powered-by badge */
+.lb-watermark,
+.lb-badge,
+.lb-portal [href*="liveblocks"],
+[data-lb-watermark],
+[class*="liveblocks-badge"],
+[class*="liveblocks-watermark"],
+[id*="liveblocks-badge"],
+[id*="liveblocks-watermark"],
+a[href*="liveblocks.io"],
+a[href*="liveblocks.com"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
