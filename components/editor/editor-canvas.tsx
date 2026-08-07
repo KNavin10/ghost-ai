@@ -534,7 +534,7 @@ function CollaborativeCanvasContent({
               nodeColor="var(--muted)"
               nodeStrokeColor="var(--border)"
               position="bottom-right"
-              style={{ right: isAiSidebarOpen ? 332 : 12 }}
+              style={{ right: isAiSidebarOpen ? 400 : 12 }}
             />
             <Background
               bgColor="var(--background)"

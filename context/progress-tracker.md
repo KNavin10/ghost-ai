@@ -137,9 +137,8 @@ change.
 - Clicking **Preview** opens the Markdown popup modal, which includes a **Download** button at the bottom for actual file download.
 - Rendered a clean empty state when no specs have been generated yet.
 - Wired up "Generate Spec" action to `POST /api/ai/spec` with button loading state and automatic spec list polling.
-- Added interactive Preview Modal using shadcn `Dialog` and `ScrollArea` to fetch and render spec Markdown with custom heading, list, code block, quote, and inline bold/code formatting.
-- Added download actions for each spec list item and inside the preview modal triggering file download via `/api/projects/[projectId]/specs/[specId]/download`.
-- Verified Spec UI Integration implementation with `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
+- Fixed Minimap layout overlap with the 384px-wide (`w-96`) AI Workspace sidebar by updating the canvas Minimap `right` offset from `332px` to `400px` when `isAiSidebarOpen` is true.
+- Verified Minimap positioning and layout with `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
 
 ## In Progress
 
