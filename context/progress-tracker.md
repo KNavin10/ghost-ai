@@ -137,8 +137,8 @@ change.
 - Clicking **Preview** opens the Markdown popup modal, which includes a **Download** button at the bottom for actual file download.
 - Rendered a clean empty state when no specs have been generated yet.
 - Wired up "Generate Spec" action to `POST /api/ai/spec` with button loading state and automatic spec list polling.
-- Fixed Minimap layout overlap with the 384px-wide (`w-96`) AI Workspace sidebar by updating the canvas Minimap `right` offset from `332px` to `400px` when `isAiSidebarOpen` is true.
-- Verified Minimap positioning and layout with `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
+- Added global CSS rules in `app/globals.css` to hide Liveblocks watermarks and badges (`.lb-watermark`, `.lb-badge`, `a[href*="liveblocks.io"]`, etc.).
+- Verified build and styles with `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
 
 ## In Progress
 
