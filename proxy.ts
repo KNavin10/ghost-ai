@@ -17,6 +17,10 @@ function isPublicAuthRoute(pathname: string) {
 
 function usesHandlerAuthentication(pathname: string) {
   return (
+    pathname === "/api/ai/design" ||
+    pathname === "/api/ai/design/token" ||
+    pathname === "/api/ai/spec" ||
+    pathname === "/api/ai/spec/token" ||
     pathname === "/api/liveblocks-auth" ||
     pathname === "/api/projects" ||
     pathname.startsWith("/api/projects/")

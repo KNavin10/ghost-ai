@@ -44,6 +44,29 @@ Remove the UserButton from the workspace navbar only. The navbar is shared so ma
 - Do not break existing autosave, presence, or collaboration logic
 - npm run build passes
 
+## Resolved — React SSR Hydration Mismatch in Chat Message List
+
+### Reported behavior
+
+- React hydration warning/error in `ProjectEditorPage` (`app/editor/[roomId]/page.tsx`): `Hydration failed because the server rendered HTML didn't match the client.`
+- Mismatch occurred in `ChatMessageList` (`components/editor/ai-sidebar.tsx`) where the server rendered the empty state (`flex min-h-full flex-col items-center justify-center...`) while the client hydrated with stored chat messages (`flex min-h-full flex-col gap-4...`).
+
+### Root cause
+
+- `ChatMessageList` initialized `localMessages` state using `useState(() => getLocalChatMessages(roomId))`.
+- `getLocalChatMessages` checked `typeof window === "undefined"`. On the server (SSR), it evaluated to `[]` (empty array). On the client during hydration, `window` was defined and read messages synchronously from `localStorage`.
+- Because initial render output differed between SSR and client hydration, React threw a hydration mismatch error.
+
+### Resolution
+
+- Initialized `localMessages` state to `[]` during `useState` definition so initial SSR and client hydration renders produce identical HTML.
+- Updated `localMessages` from `localStorage` inside `useEffect` (which runs strictly after client hydration completes).
+
+### Regression checks
+
+- Never invoke `localStorage` or `window`-dependent logic directly inside `useState` initializers in SSR / Client components.
+- Always initialize browser-dependent local state to a deterministic default (`[]`, `null`, `false`), then update via `useEffect` after mount.
+
 ## Resolved — Canvas nodes can create visible connections
 
 ### Reported behavior

@@ -4,13 +4,13 @@
 Update this file after every meaningful implementation
 change.
 
-## Current Phase
+### Current Phase
 
-- Complete — Canvas Autosave & Vercel Blob Integration
+- Complete — Spec UI Integration (Feature Spec 29)
 
 ## Current Goal
 
-- None.
+- None — Feature Spec 29 is complete.
 - Reviewed the project context files and design-system specification.
 - Initialized shadcn/ui with the Base Nova style and Tailwind CSS variables.
 - Added Button, Card, Dialog, Input, Tabs, Textarea, and Scrollarea primitives.
@@ -85,6 +85,61 @@ change.
 - Added `hooks/use-canvas-autosave.ts` with 2-second debounced autosave, manual save triggers, and transient state management.
 - Loaded saved canvas state from Vercel Blob when initializing an empty Liveblocks room while skipping fetch if nodes or edges exist.
 - Added manual Save button and visual status indicator (`Save`, `Saving...`, `Saved`, `Error`) to the editor top workspace navbar.
+- Added the Prisma `TaskRun` model and migration to persist Trigger.dev run ownership by `runId`, `projectId`, and `userId`.
+- Added the minimal `design-agent` Trigger.dev task with the required `prompt` and `roomId` payload and no AI or canvas logic.
+- Added authenticated `POST /api/ai/design` validation, accessible-project authorization, Trigger.dev task triggering, and `TaskRun` persistence.
+- Added authenticated `POST /api/ai/design/token` ownership verification and run-scoped Trigger.dev public token issuance.
+- Added the AI API paths to handler-level Clerk authentication so they return explicit JSON `401` responses when unauthenticated.
+- Excluded Trigger.dev's generated `.trigger/` state from ESLint so local task bundles do not enter application linting.
+- Implemented the full Trigger.dev design agent with Gemini structured output, strict Zod action validation, current-canvas context, and normalized node and edge IDs.
+- Added all required collaborative mutations through Liveblocks React Flow's server-side `mutateFlow()` utility: add, move, resize, update, and delete nodes plus add and delete edges.
+- Enforced the existing six-shape contract, paired application color palette, bounded dimensions, 24px grid alignment, spacing guidance, concise labels, valid edge endpoints, and connected-edge cleanup on node deletion.
+- Added room-wide design-agent status events for start, planning, each applied action, completion, and failure, with matching Trigger.dev run metadata progress.
+- Added Liveblocks ephemeral Ghost AI presence with shared cursor and thinking state, action-target cursor movement, automatic TTL renewal, and a two-second final expiry cleanup.
+- Connected the AI Architect composer to the authenticated design API and added in-canvas shared AI status UI plus Ghost AI presence visibility for every room participant.
+- Added graceful failure handling that broadcasts an error state, preserves already-valid canvas state, logs the root error, and clears AI presence in a finalizer.
+- Replaced the unavailable-for-new-users `gemini-2.5-flash` design model with `gemini-3.5-flash` after confirming that the configured Google Generative AI account exposes it with `generateContent` support.
+- Fixed Gemini structured-plan failures by separating the tolerant provider response schema from the strict canvas-action schema, disabling Google response-schema enforcement while retaining JSON MIME output, and validating every canonicalized action before mutation.
+- Added model-output canonicalization for observed Gemini aliases: `action` becomes `type`, known hex colors map to palette names, `ellipse` and `oval` map to `circle`, and database/storage shape names map to `cylinder`; unsupported colors and shapes fall back to existing neutral and rectangle contracts.
+- Added up to three bounded plan-generation attempts with deterministic retry temperature and logged raw response/validation diagnostics when AI SDK raises `AI_NoObjectGeneratedError`.
+- Verified the structured-output fix against Context7's current Vercel AI SDK and Google provider documentation, and added `satisfies GoogleLanguageModelOptions` to the documented `providerOptions.google.structuredOutputs: false` workaround.
+- Implemented the shared `ai-status-feed` with a validated, generic task-status payload supporting optional text, server-side idempotent feed provisioning, and durable status messages from the design agent.
+- Hoisted the existing Liveblocks provider to the workspace boundary so the AI sidebar and canvas consume one project room connection and the sidebar subscribes to only the latest feed message.
+- Added shared AI activity UI that combines validated feed stages with participant `thinking` presence, disables only the chat composer during active generation, and keeps the rest of the sidebar usable.
+- Added thinking spinners to live cursor name badges when a participant's presence contains `thinking: true`.
+- Added the room-scoped `ai-chat` Liveblocks feed with race-tolerant server provisioning alongside the existing status feed.
+- Replaced local sidebar demo messages and design-task triggering with validated collaborative room chat using authenticated Liveblocks sender metadata.
+- Added chronological chat rendering with sender names, deterministic UTC timestamps, message content, loading and load-error states, and own-message alignment.
+- Added promise-aware message sending that keeps drafts until persistence succeeds, clears successful sends, reports failures inline, and enforces the shared 2,000-character Zod contract.
+- Wired the AI Architect composer submit to the authenticated `POST /api/ai/design` endpoint: it pushes the user message to the collaborative `ai-chat` feed first, then stores the returned `runId` and `publicToken` in local state.
+- Added realtime design-run tracking with `useRealtimeRun` from `@trigger.dev/react-hooks`, keyed per run ID so consecutive runs subscribe with fresh state and never inherit a completed run's shape or subscription error.
+- Disabled the chat composer and showed a spinner in the send button while a design run is active, covering message persistence, API triggering, and the live run subscription.
+- Pushed a final Ghost AI chat message when the run finishes, using the typed run output summary for success and distinct failure copy for canceled, crashed, expired, timed-out, and errored runs plus subscription failures.
+- Added a compact status strip above the composer that appears only during active runs, reading the latest `ai-status-feed` message with a dark surface, green accent pulse indicator, and fallback "working on the canvas" text.
+- Styled user chat bubbles with the spec's green accent background (`#62C073`) and readable dark text, kept AI and collaborator bubbles dark with light text, and switched the send button to the green accent with its existing dimmed disabled state.
+- Showed design-start and run-subscription errors as `ai-chat` feed messages from Ghost AI so every room participant sees failures, while the composer's inline error remains reserved for feed persistence failures.
+- Added shared `designStartResponse` and `designStartError` Zod schemas plus the Ghost AI chat sender constants to `types/tasks.ts` so the run-start contract is validated consistently.
+- Kept canvas updates fully delegated to Liveblocks (`useLiveblocksFlow`) — the sidebar performs no manual node or edge syncing.
+- Added `POST /api/ai/spec` endpoint for triggering technical spec generation with Clerk authentication, room-based project access control, Trigger.dev task execution, and `TaskRun` persistence.
+- Added `POST /api/ai/spec/token` endpoint for issuing 1-hour run-scoped Trigger.dev public access tokens to verified `TaskRun` owners.
+- Added `generateSpecTask` Trigger.dev task in `src/trigger/generate-spec.ts` using `@ai-sdk/google` (`gemini-3.5-flash`) to generate structured Markdown specs from canvas nodes/edges and chat history context.
+- Added `/api/ai/spec` and `/api/ai/spec/token` to `proxy.ts` handler-level authentication exemption list.
+- Added Prisma `ProjectSpec` model with `id`, `projectId`, `filePath`, and `createdAt` fields, linked with cascade deletion to `Project`.
+- Added migration SQL for `ProjectSpec` table and regenerated Prisma Client.
+- Updated `generateSpecTask` in `src/trigger/generate-spec.ts` to upload generated Markdown spec files to Vercel Blob and save metadata to Prisma `ProjectSpec`.
+- Added `GET /api/projects/[projectId]/specs/[specId]/download` API route with Clerk authentication, project access control, and Vercel Blob file retrieval returning Markdown attachment responses.
+- Verified spec persistence and download implementation with `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
+- Added `GET /api/projects/[projectId]/specs` API route with Clerk authentication and project authorization checks to list specs for the current project, with graceful fallback handling if the database table is unmigrated.
+- Updated `SpecsTab` in `components/editor/ai-sidebar.tsx` to render static HTML on tab click with 0 automatic API calls on mount, triggering API calls only when clicking "Generate Spec".
+- Wrapped collapsible execution log steps inside shadcn `<ScrollArea className="max-h-48">` to ensure smooth scrolling within a fixed boundary when step logs overflow.
+- Added interactive dismiss (`X` icon) buttons to error and success message banners so users can dismiss error messages.
+- Removed static demo spec card and updated `SpecsTab` in `components/editor/ai-sidebar.tsx` to render a clean list of generated specs with Preview (`Eye` icon) and Download (`Download` icon) action buttons per item.
+- Clicking **Preview** opens the Markdown popup modal, which includes a **Download** button at the bottom for actual file download.
+- Rendered a clean empty state when no specs have been generated yet.
+- Wired up "Generate Spec" action to `POST /api/ai/spec` with button loading state and automatic spec list polling.
+- Added interactive Preview Modal using shadcn `Dialog` and `ScrollArea` to fetch and render spec Markdown with custom heading, list, code block, quote, and inline bold/code formatting.
+- Added download actions for each spec list item and inside the preview modal triggering file download via `/api/projects/[projectId]/specs/[specId]/download`.
+- Verified Spec UI Integration implementation with `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
 
 ## In Progress
 
@@ -92,7 +147,7 @@ change.
 
 ## Next Up
 
-- Define the next feature spec after starter templates.
+- Browser smoke-test the chat recovery fix: the chat history should load on page load (retrying every 3s up to 20 attempts if the first websocket fetch times out), and after a prompt the Ghost AI completion message should appear with the loader clearing.
 
 ## Open Questions
 
@@ -123,6 +178,25 @@ change.
 - Keep presence UI inside the editor canvas room view, filter participants by the Clerk user ID, and leave the shared/editor-home navbar unchanged.
 - Keep the AI sidebar controlled by the workspace while keeping chat and spec content local until backend and AI generation work is specified.
 - Store project canvas JSON in Vercel Blob via `@vercel/blob` `put()` with `addRandomSuffix: false`, and keep Prisma responsible for storing metadata and the blob URL in `canvasJsonPath`.
+- Store Trigger.dev run ownership in Prisma and require the authenticated Clerk user to match the stored `TaskRun.userId` before issuing a run-scoped public token.
+- Use Trigger.dev SDK 4.5.9's `auth.createPublicToken()` with `read.runs` scoped to one persisted run and a 15-minute expiration; do not expose the server secret to clients.
+- Keep the design task payload limited to `prompt` and `roomId`; `projectId` is validated and authorized by the API route but is not sent into the task because the feature spec only requires those task inputs.
+- Use AI SDK 7 structured output with the existing `@ai-sdk/google` provider configured explicitly from `GOOGLE_AI_API_KEY`, and validate every Gemini plan against a discriminated Zod action schema before mutation.
+- Route background canvas edits through `@liveblocks/react-flow/node` `mutateFlow()` so server-side agent changes use the same `flow` storage representation as the browser hook instead of editing Liveblocks internals directly.
+- Represent Ghost AI as Liveblocks ephemeral presence rather than a persistent user or a second state system; publish durable run progress in Trigger.dev metadata and room-visible progress through typed Liveblocks events.
+- Apply validated actions sequentially so participants see real-time canvas updates and status changes, while skipping unknown references instead of corrupting collaborative storage.
+- Treat generated model JSON as untrusted input: use a Gemini-compatible flat response boundary, canonicalize known semantic aliases, then require the existing strict discriminated action schema before any Liveblocks mutation.
+- Use Liveblocks room feeds for durable shared AI status recovery and typed ephemeral presence for live activity, rather than introducing a parallel realtime state store.
+- Keep `ai-status-feed` provisioned server-side during room authorization and task startup, with a race-tolerant create-on-404 path.
+- Validate feed message data with the shared task schema immediately before rendering; ignore malformed messages instead of showing untrusted content.
+- Keep collaborative user messages in the separate room-scoped `ai-chat` feed; never mix them with design-agent status records in `ai-status-feed`.
+- Type the global Liveblocks feed payload as the union of chat and task-status contracts, then validate against the feed-specific Zod schema at each render boundary.
+- Use the room token's authenticated `UserMeta` for chat sender ID and name, and clear a composer draft only after `useCreateFeedMessage()` resolves successfully.
+- Track triggered design runs client-side with `useRealtimeRun` keyed per run ID through the hook's `id` option so each run subscribes with fresh run and error state instead of inheriting a previous run's shape.
+- Derive run completion instead of resetting state in an effect: `runState` persists after resolution, the composer and status strip derive from `run.finishedAt` and `runError`, and the effect only writes the final Ghost AI message to the `ai-chat` feed with a run-ID ref guard.
+- Treat design-start and run-subscription failures as collaborative Ghost AI messages in the `ai-chat` feed so the durable room feed remains the single error channel visible to every participant.
+- Keep run completion resilient to realtime delivery failures: the sidebar polls `GET /api/v3/runs/{runId}` with the run-scoped public token as a fallback to `useRealtimeRun`, treating either source's `finishedAt` (or a terminal failed status) as completion and giving up with an error message after 75 attempts (~5 minutes) or 4 consecutive request failures.
+- Keep the chat feed read self-healing despite `useFeedMessages`' permanent-error behavior (`autoRetry: false`): render the feed inside a keyed child component that remounts on error after a 3-second delay, so a slow websocket or a late-created feed recovers automatically instead of blocking the chat history forever.
 
 ## Session Notes
 
@@ -155,3 +229,14 @@ change.
 - Edge behavior verification passed: `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `git diff --check`; new connections are registered as `canvasEdge` with arrow defaults, and edge labels use the collaborative edge replacement flow. Interactive live-room connection and label editing remain unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
 - Canvas ergonomics verification passed: `npm run lint`, `npx tsc --noEmit`, and `git diff --check`; the control bar uses animated React Flow viewport actions, Liveblocks history availability state, and shared keyboard handlers. Interactive live-room history verification remains unavailable until `LIVEBLOCKS_SECRET_KEY` is configured.
 - Starter-template verification passed: `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `git diff --check`; interactive import remains dependent on a configured Liveblocks room.
+- Design-agent API verification passed: Prisma validation and client generation passed with a syntactically valid temporary local `DATABASE_URL`; `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `git diff --check` passed. The migration was authored manually because no database URL is configured in this workspace, so applying it to a database remains pending in a configured environment. Live Trigger.dev execution and token issuance remain unverified because no Trigger secret is configured locally.
+- Full design-agent verification passed: `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `git diff --check`. The installed Liveblocks 3.23.0 APIs confirm both backend `mutateFlow()` and ephemeral `setPresence()` support, and the installed AI SDK 7.0.55 API confirms `generateText()` with `Output.object()`. Live Gemini generation and Trigger.dev execution were not invoked during verification to avoid mutating a real collaborative room without an explicit test project, although the required Google, Liveblocks, and Trigger environment variable names are configured locally.
+- Gemini model compatibility verification passed after the Trigger.dev test exposed that `gemini-2.5-flash` is unavailable to new users: the configured Google Models API returned `models/gemini-3.5-flash` with `generateContent`, `countTokens`, `createCachedContent`, and `batchGenerateContent` support; `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `git diff --check` then passed with the replacement model.
+- Structured-plan regression verification passed after a Trigger.dev run exposed `AI_NoObjectGeneratedError`: captured model output used `action` instead of `type`, hex colors instead of palette names, and unsupported `ellipse`/`database` shape labels. A non-mutating AI SDK call using `gemini-3.5-flash`, `Output.object()`, and `providerOptions.google.structuredOutputs: false` returned a parseable five-action plan through the new response boundary; a direct JSON MIME smoke test also returned a valid five-action plan. `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `git diff --check` pass after canonicalization and retry handling.
+- Context7 verification passed through the official `@upstash/context7-mcp` 3.2.5 stdio server. `/vercel/ai` confirmed AI SDK 7's stable `generateText()` plus `Output.object()` API and documented `NoObjectGeneratedError` diagnostics; `/websites/ai-sdk_dev` confirmed `providerOptions.google.structuredOutputs: false` as the supported workaround for Google OpenAPI schema limitations such as unions, typed with `GoogleLanguageModelOptions`. The final non-mutating Gemini smoke test returned a valid nine-action object through that exact configuration, followed by passing `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `git diff --check`. Context7 is callable through `npx`, but it is not registered in Roo's user-level `mcp_settings.json`, so its tools are not automatically exposed to this agent session.
+- AI presence-state verification passed: the task-status schema smoke test rejected malformed payloads and recognized active stages; `npx tsc --noEmit`, `npm run lint`, `npm run build`, and `git diff --check` all passed. Live feed creation, multi-user feed synchronization, and cursor spinner interaction remain unverified because no connected browser session or configured `LIVEBLOCKS_SECRET_KEY` was available.
+- Sidebar chat-feed verification passed: Context7 and the installed Liveblocks 3.23.0 types confirmed newest-first `useFeedMessages()` results and the promise-returning room-scoped `useCreateFeedMessage()` API. The schema smoke test accepted valid chat, rejected malformed chat, and rejected chat as task status; `npx tsc --noEmit`, `npm run lint`, `npm run build`, and `git diff --check` passed. Live two-user synchronization and send-error interaction remain unverified without an authenticated connected browser session.
+- AI chat functional verification passed: the installed `@trigger.dev/react-hooks` 4.5.9 source confirms `useRealtimeRun` accepts per-run `id` and `enabled` options, requires an `accessToken`, keys run and error state per run, and closes the subscription on completion; `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `git diff --check` passed. Live submission, realtime run subscription, and two-user chat/status synchronization remain unverified without a connected authenticated browser session.
+- Realtime-delivery investigation passed: a live Node subscription to a completed `design-agent` run (using the same run-scoped public token flow) delivered the completed run shape with `finishedAt` and `output.summary`, and `GET /api/v3/runs/{id}` with just the public bearer token returned the same fields with permissive CORS — so both completion signals are browser-safe. Because the SSE path can retry silently with `maxRetries: Infinity` when a browser connection fails, the sidebar now derives completion from realtime OR a 4s polling fallback, posts the Ghost AI completion/failure message from whichever source resolves, and clears the loader via the derived `effectiveRunFinished` flag.
+- Post-test UI hardening passed: `npm run lint` and `npx tsc --noEmit` pass after removing the duplicate status indicator above the tabs (the status strip above the composer remains), letting long status text wrap instead of truncate, conjugating the in-progress plan summary (`Plan ready: Designed ...` becomes `Plan ready: Designing ...`) in the design agent, and shifting the canvas minimap left by the sidebar width (`right: 332px`) while the AI sidebar is open.
+- Chat-feed recovery fix passed: `npx tsc --noEmit`, `npm run lint`, `npm run build`, and `git diff --check`. Root cause of the permanent "Chat messages could not be loaded." error: `useFeedMessages` fetches the feed over the room websocket with a 5-second timeout and `autoRetry: false` (confirmed in the installed `@liveblocks/react` source, and that even a missing feed returns `{"data":[]}` server-side), so one slow connection makes the initial fetch fail permanently. The chat list now lives in a keyed `ChatMessageListInner` that is remounted with a fresh fetch every 3 seconds after an error, up to 20 attempts, before giving up; while retrying it shows "Chat messages could not be loaded. Retrying..." instead of blocking forever.
