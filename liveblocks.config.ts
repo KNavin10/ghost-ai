@@ -1,6 +1,16 @@
+import type { FeedMessageData } from "@/types/tasks"
+
 type CursorPosition = {
   x: number
   y: number
+}
+
+type DesignAgentStatusEvent = {
+  type: "design-agent-status"
+  runId: string
+  stage: "start" | "processing" | "complete" | "error"
+  message: string
+  timestamp: string
 }
 
 declare global {
@@ -21,7 +31,11 @@ declare global {
       }
     }
 
-    RoomEvent: Record<string, never>
+    RoomEvent: DesignAgentStatusEvent
+
+    FeedMetadata: Record<string, never>
+
+    FeedMessageData: FeedMessageData
 
     ThreadMetadata: Record<string, never>
 

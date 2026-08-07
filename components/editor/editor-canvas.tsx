@@ -10,11 +10,7 @@ import {
   useUndo,
   useUpdateMyPresence,
 } from "@liveblocks/react/suspense"
-import {
-  ClientSideSuspense,
-  LiveblocksProvider,
-  RoomProvider,
-} from "@liveblocks/react/suspense"
+import { ClientSideSuspense } from "@liveblocks/react/suspense"
 import {
   Background,
   BackgroundVariant,
@@ -67,6 +63,7 @@ import { NODE_COLOR_PALETTE } from "@/types/canvas"
 import "@xyflow/react/dist/style.css"
 
 type EditorCanvasProps = {
+  isAiSidebarOpen: boolean
   isStarterTemplatesOpen: boolean
   onSaveHandlerReady?: (handler: () => Promise<boolean>) => void
   onSaveStatusChange?: (status: SaveStatus) => void
@@ -86,6 +83,7 @@ const edgeTypes = { canvasEdge: CanvasEdgeRenderer }
 let canvasNodeCounter = 0
 
 function EditorCanvas({
+  isAiSidebarOpen,
   isStarterTemplatesOpen,
   onSaveHandlerReady,
   onSaveStatusChange,
@@ -95,28 +93,23 @@ function EditorCanvas({
   return (
     <div className="h-full min-h-0 w-full">
       <ErrorBoundary fallback={<CanvasError />}>
-        <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
-          <RoomProvider
-            id={roomId}
-            initialPresence={{ cursor: null, thinking: false }}
-          >
-            <ClientSideSuspense fallback={<CanvasLoading />}>
-              <CollaborativeCanvas
-                isStarterTemplatesOpen={isStarterTemplatesOpen}
-                onSaveHandlerReady={onSaveHandlerReady}
-                onSaveStatusChange={onSaveStatusChange}
-                onStarterTemplatesOpenChange={onStarterTemplatesOpenChange}
-                roomId={roomId}
-              />
-            </ClientSideSuspense>
-          </RoomProvider>
-        </LiveblocksProvider>
+        <ClientSideSuspense fallback={<CanvasLoading />}>
+          <CollaborativeCanvas
+            isAiSidebarOpen={isAiSidebarOpen}
+            isStarterTemplatesOpen={isStarterTemplatesOpen}
+            onSaveHandlerReady={onSaveHandlerReady}
+            onSaveStatusChange={onSaveStatusChange}
+            onStarterTemplatesOpenChange={onStarterTemplatesOpenChange}
+            roomId={roomId}
+          />
+        </ClientSideSuspense>
       </ErrorBoundary>
     </div>
   )
 }
 
 function CollaborativeCanvas({
+  isAiSidebarOpen,
   isStarterTemplatesOpen,
   onSaveHandlerReady,
   onSaveStatusChange,
@@ -126,6 +119,7 @@ function CollaborativeCanvas({
   return (
     <ReactFlowProvider>
       <CollaborativeCanvasContent
+        isAiSidebarOpen={isAiSidebarOpen}
         isStarterTemplatesOpen={isStarterTemplatesOpen}
         onSaveHandlerReady={onSaveHandlerReady}
         onSaveStatusChange={onSaveStatusChange}
@@ -137,6 +131,7 @@ function CollaborativeCanvas({
 }
 
 function CollaborativeCanvasContent({
+  isAiSidebarOpen,
   isStarterTemplatesOpen,
   onSaveHandlerReady,
   onSaveStatusChange,
@@ -538,6 +533,8 @@ function CollaborativeCanvasContent({
               maskColor="color-mix(in oklab, var(--background) 72%, transparent)"
               nodeColor="var(--muted)"
               nodeStrokeColor="var(--border)"
+              position="bottom-right"
+              style={{ right: isAiSidebarOpen ? 332 : 12 }}
             />
             <Background
               bgColor="var(--background)"

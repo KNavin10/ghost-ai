@@ -14,6 +14,8 @@ import {
   Share2,
 } from "lucide-react"
 
+import { LiveblocksProvider, RoomProvider } from "@liveblocks/react/suspense"
+
 import { EditorCanvas } from "@/components/editor/editor-canvas"
 import { AiSidebar } from "@/components/editor/ai-sidebar"
 import { ProjectDialogs } from "@/components/editor/project-dialogs"
@@ -57,58 +59,67 @@ function EditorWorkspace({
   )
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-background">
-      <WorkspaceNavbar
-        isAiSidebarOpen={isAiSidebarOpen}
-        isProjectSidebarOpen={isProjectSidebarOpen}
-        onAiSidebarToggle={() => setIsAiSidebarOpen((isOpen) => !isOpen)}
-        onProjectSidebarToggle={() =>
-          setIsProjectSidebarOpen((isOpen) => !isOpen)
-        }
-        onSave={handleSave}
-        onShare={() => setIsShareDialogOpen(true)}
-        onStarterTemplates={() => setIsStarterTemplatesOpen(true)}
-        projectName={project.name}
-        saveStatus={saveStatus}
-      />
-
-      <div className="relative flex min-h-0 flex-1 overflow-hidden">
-        <ProjectSidebar
-          activeProjectId={project.id}
-          isOpen={isProjectSidebarOpen}
-          onCreate={projectActions.openCreateDialog}
-          onDelete={projectActions.openDeleteDialog}
-          onOpenChange={setIsProjectSidebarOpen}
-          onRename={projectActions.openRenameDialog}
-          ownedProjects={ownedProjects}
-          sharedProjects={sharedProjects}
-        />
-
-        <main className="min-w-0 flex-1 bg-background">
-          <EditorCanvas
-            isStarterTemplatesOpen={isStarterTemplatesOpen}
-            onSaveHandlerReady={handleSaveHandlerReady}
-            onSaveStatusChange={setSaveStatus}
-            onStarterTemplatesOpenChange={setIsStarterTemplatesOpen}
-            roomId={project.id}
+    <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
+      <RoomProvider
+        id={project.id}
+        initialPresence={{ cursor: null, thinking: false }}
+      >
+        <div className="flex h-dvh flex-col overflow-hidden bg-background">
+          <WorkspaceNavbar
+            isAiSidebarOpen={isAiSidebarOpen}
+            isProjectSidebarOpen={isProjectSidebarOpen}
+            onAiSidebarToggle={() => setIsAiSidebarOpen((isOpen) => !isOpen)}
+            onProjectSidebarToggle={() =>
+              setIsProjectSidebarOpen((isOpen) => !isOpen)
+            }
+            onSave={handleSave}
+            onShare={() => setIsShareDialogOpen(true)}
+            onStarterTemplates={() => setIsStarterTemplatesOpen(true)}
+            projectName={project.name}
+            saveStatus={saveStatus}
           />
-        </main>
 
-        <AiSidebar
-          isOpen={isAiSidebarOpen}
-          onOpenChange={setIsAiSidebarOpen}
-        />
-      </div>
+          <div className="relative flex min-h-0 flex-1 overflow-hidden">
+            <ProjectSidebar
+              activeProjectId={project.id}
+              isOpen={isProjectSidebarOpen}
+              onCreate={projectActions.openCreateDialog}
+              onDelete={projectActions.openDeleteDialog}
+              onOpenChange={setIsProjectSidebarOpen}
+              onRename={projectActions.openRenameDialog}
+              ownedProjects={ownedProjects}
+              sharedProjects={sharedProjects}
+            />
 
-      <ProjectDialogs dialogs={projectActions} />
-      <ShareProjectDialog
-        isOwner={project.isOwner}
-        onOpenChange={setIsShareDialogOpen}
-        open={isShareDialogOpen}
-        projectId={project.id}
-        projectName={project.name}
-      />
-    </div>
+            <main className="min-w-0 flex-1 bg-background">
+              <EditorCanvas
+                isAiSidebarOpen={isAiSidebarOpen}
+                isStarterTemplatesOpen={isStarterTemplatesOpen}
+                onSaveHandlerReady={handleSaveHandlerReady}
+                onSaveStatusChange={setSaveStatus}
+                onStarterTemplatesOpenChange={setIsStarterTemplatesOpen}
+                roomId={project.id}
+              />
+            </main>
+
+            <AiSidebar
+              isOpen={isAiSidebarOpen}
+              onOpenChange={setIsAiSidebarOpen}
+              roomId={project.id}
+            />
+          </div>
+
+          <ProjectDialogs dialogs={projectActions} />
+          <ShareProjectDialog
+            isOwner={project.isOwner}
+            onOpenChange={setIsShareDialogOpen}
+            open={isShareDialogOpen}
+            projectId={project.id}
+            projectName={project.name}
+          />
+        </div>
+      </RoomProvider>
+    </LiveblocksProvider>
   )
 }
 

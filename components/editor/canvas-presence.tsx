@@ -3,14 +3,23 @@
 import { useAuth, UserButton } from "@clerk/nextjs"
 import {
   shallow,
+  useEventListener,
   useOther,
   useOthersConnectionIds,
+  useOthersListener,
   useOthersMapped,
 } from "@liveblocks/react/suspense"
-import { MousePointer2 } from "lucide-react"
+import { Bot, CircleCheck, CircleX, Loader2, MousePointer2 } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import type { MouseEvent as ReactMouseEvent } from "react"
 
 const AVATAR_SIZE_CLASS = "size-8"
+
+type DesignAgentStatus = {
+  message: string
+  runId: string
+  stage: "start" | "processing" | "complete" | "error"
+}
 
 type ParticipantInfo = {
   avatar: string
@@ -116,6 +125,92 @@ function CollaboratorAvatar({
   )
 }
 
+function DesignAgentStatusFeed() {
+  const [status, setStatus] = useState<DesignAgentStatus | null>(null)
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useOthersListener((event) => {
+    if (event.type === "enter" && event.user.id === "ghost-ai-design-agent") {
+      setStatus((current) =>
+        current ?? {
+          message: "Ghost AI is thinking about the design...",
+          runId: "presence",
+          stage: "processing",
+        }
+      )
+    }
+
+    if (event.type === "leave" && event.user.id === "ghost-ai-design-agent") {
+      setStatus((current) =>
+        current?.runId === "presence" ? null : current
+      )
+    }
+  })
+
+  useEventListener(({ event }) => {
+    if (event.type !== "design-agent-status") {
+      return
+    }
+
+    if (clearTimerRef.current) {
+      clearTimeout(clearTimerRef.current)
+    }
+
+    setStatus({
+      message: event.message,
+      runId: event.runId,
+      stage: event.stage,
+    })
+
+    if (event.stage === "complete" || event.stage === "error") {
+      clearTimerRef.current = setTimeout(() => setStatus(null), 8_000)
+    }
+  })
+
+  useEffect(
+    () => () => {
+      if (clearTimerRef.current) {
+        clearTimeout(clearTimerRef.current)
+      }
+    },
+    []
+  )
+
+  if (!status) {
+    return null
+  }
+
+  const StatusIcon =
+    status.stage === "complete"
+      ? CircleCheck
+      : status.stage === "error"
+        ? CircleX
+        : status.stage === "processing"
+          ? Loader2
+          : Bot
+
+  return (
+    <div
+      aria-live="polite"
+      className="absolute left-1/2 top-4 z-20 flex max-w-[min(34rem,calc(100%-2rem))] -translate-x-1/2 items-center gap-2 rounded-full border border-border/80 bg-card/95 px-4 py-2 text-xs text-foreground shadow-lg backdrop-blur"
+      data-run-id={status.runId}
+      role="status"
+    >
+      <StatusIcon
+        aria-hidden="true"
+        className={
+          status.stage === "processing"
+            ? "size-4 shrink-0 animate-spin text-accent-foreground"
+            : status.stage === "error"
+              ? "size-4 shrink-0 text-destructive"
+              : "size-4 shrink-0 text-accent-foreground"
+        }
+      />
+      <span className="truncate">{status.message}</span>
+    </div>
+  )
+}
+
 function LiveCursors() {
   const connectionIds = useOthersConnectionIds()
 
@@ -136,6 +231,7 @@ function CollaboratorCursor({ connectionId }: { connectionId: number }) {
       color: other.info.color,
       cursor: other.presence.cursor,
       name: other.info.name,
+      thinking: other.presence.thinking === true,
       userId: other.id,
     }),
     shallow
@@ -165,10 +261,16 @@ function CollaboratorCursor({ connectionId }: { connectionId: number }) {
         style={{ fill: participant.color, color: participant.color }}
       />
       <span
-        className="absolute left-3 top-3 max-w-36 truncate rounded-full px-2 py-0.5 text-[10px] font-semibold leading-4 shadow-md"
+        className="absolute left-3 top-3 flex max-w-36 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-4 shadow-md"
         style={badgeStyle}
       >
-        {participant.name}
+        <span className="truncate">{participant.name}</span>
+        {participant.thinking ? (
+          <Loader2
+            aria-label="Thinking"
+            className="ml-1 size-2.5 shrink-0 animate-spin"
+          />
+        ) : null}
       </span>
     </div>
   )
@@ -178,6 +280,7 @@ function CanvasPresence() {
   return (
     <>
       <PresenceAvatars />
+      <DesignAgentStatusFeed />
       <LiveCursors />
     </>
   )

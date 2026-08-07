@@ -1,3 +1,4 @@
+import { ensureAiFeeds } from "@/lib/ai-status-feed"
 import {
   getAccessibleProject,
   getCurrentClerkIdentity,
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
     await liveblocks.getOrCreateRoom(project.id, {
       defaultAccesses: [],
     })
+    await ensureAiFeeds(liveblocks, project.id)
 
     const session = liveblocks.prepareSession(identity.userId, {
       userInfo: {
@@ -67,10 +69,13 @@ export async function POST(request: Request) {
       status,
     })
   } catch (error) {
+    const detail =
+      error instanceof Error ? error.message : "Unknown error"
+
     console.error("Liveblocks authentication failed", error)
 
     return Response.json(
-      { error: "Liveblocks authentication failed" },
+      { error: "Liveblocks authentication failed", detail },
       { status: 500 }
     )
   }
